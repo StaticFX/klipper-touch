@@ -14,7 +14,7 @@ A modern touchscreen UI for Klipper 3D printers.
 - **Movement** -- XY jog pad with Z controls, configurable step sizes and speeds, axis inversion
 - **Fan control** -- Auto-discovers all fans from Klipper config; sliders for controllable fans, read-only display for automatic fans
 - **Extruder** -- Temperature presets, extrude/retract, filament load/unload, flow rate display
-- **Bed mesh** -- Interactive 3D surface visualizer with touch rotation, Z exaggeration slider, color-coded height map
+- **Bed mesh** -- Interactive 3D surface visualizer with touch Urotation, Z exaggeration slider, color-coded height map
 - **Macros** -- Auto-discovers macros from Klipper, parses parameters with defaults, confirmation dialogs
 - **Settings** -- Theme switching (light/dark), Moonraker connection, network info
 - **Emergency stop** -- Always accessible from the status bar
@@ -24,7 +24,7 @@ A modern touchscreen UI for Klipper 3D printers.
 On your Raspberry Pi (ARM64, Debian/Ubuntu), run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/devin/klipper-touch/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/staticfc/klipper-touch/master/scripts/install.sh | bash
 ```
 
 Or with options:

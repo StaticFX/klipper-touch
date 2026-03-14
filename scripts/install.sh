@@ -145,7 +145,7 @@ install_deb() {
 
   info "Installing package (apt will pull runtime dependencies)..."
   sudo apt-get update -qq
-  sudo apt-get install -y -qq "${deb_file}"
+  sudo apt-get install -y -qq --allow-downgrades "${deb_file}"
   success "Package installed."
 }
 
