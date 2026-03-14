@@ -173,6 +173,34 @@ install_keyboard() {
   success "Virtual keyboard installed."
 }
 
+# ── Disable screen blanking ──────────────────────────────────────────────────
+disable_screen_blanking() {
+  info "Disabling screen blanking..."
+
+  # Disable console blanking via kernel parameter
+  local cmdline="/boot/firmware/cmdline.txt"
+  if [ -f "${cmdline}" ]; then
+    if ! grep -q "consoleblank=0" "${cmdline}"; then
+      sudo sed -i 's/$/ consoleblank=0/' "${cmdline}"
+      success "Console blanking disabled in ${cmdline}"
+    else
+      success "Console blanking already disabled."
+    fi
+  fi
+
+  # Disable DPMS via udev rule
+  if [ ! -f /etc/udev/rules.d/99-klipper-touch-noblank.rules ]; then
+    sudo tee /etc/udev/rules.d/99-klipper-touch-noblank.rules > /dev/null << 'RULES'
+# Disable display power management for klipper-touch kiosk
+SUBSYSTEM=="power_supply", ENV{DPMS}="0"
+RULES
+    success "DPMS blanking disabled."
+  fi
+
+  # Apply immediately for current session
+  echo 0 | sudo tee /sys/module/kernel/parameters/consoleblank > /dev/null 2>&1 || true
+}
+
 # ── Create default config ────────────────────────────────────────────────────
 create_config() {
   if [ -f "${CONFIG_DIR}/config.toml" ]; then
@@ -240,6 +268,7 @@ Environment=XDG_RUNTIME_DIR=/run/user/%U
 Environment=WLR_DRM_NO_MODIFIERS=1
 Environment=WLR_RENDERER=gles2
 Environment=WEBKIT_FORCE_SANDBOX=0
+Environment=WEBKIT_DISABLE_DMABUF_RENDERER=1
 ExecStartPre=+/bin/mkdir -p /run/user/%U
 ExecStartPre=+/bin/chown %i:%i /run/user/%U
 ExecStartPre=+/bin/chmod 700 /run/user/%U
@@ -321,6 +350,7 @@ main() {
   install_keyboard
   create_config
   install_service
+  disable_screen_blanking
   handle_klipperscreen
   start_service
   print_summary
