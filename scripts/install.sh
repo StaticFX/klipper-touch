@@ -177,7 +177,7 @@ create_config() {
 moonraker_url = "${MOONRAKER_URL}"
 
 # Theme: "light" or "dark"
-theme = "dark"
+theme = "light"
 
 # Add custom macros below:
 # [[macros]]
@@ -225,15 +225,15 @@ PAMName=login
 TTYPath=/dev/tty7
 Environment=XDG_RUNTIME_DIR=/run/user/%U
 Environment=WLR_LIBINPUT_NO_DEVICES=1
-ExecStartPre=/bin/mkdir -p /run/user/%U
-ExecStartPre=/bin/chown %i:%i /run/user/%U
-ExecStartPre=/bin/chmod 700 /run/user/%U
+ExecStartPre=+/bin/mkdir -p /run/user/%U
+ExecStartPre=+/bin/chown %i:%i /run/user/%U
+ExecStartPre=+/bin/chmod 700 /run/user/%U
 ExecStart=/usr/bin/cage -s -- ${bin_path}
 Restart=on-failure
 RestartSec=5
 
 [Install]
-WantedBy=graphical.target
+WantedBy=multi-user.target
 UNIT
 
   sudo systemctl daemon-reload

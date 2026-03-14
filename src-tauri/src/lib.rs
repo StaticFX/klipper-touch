@@ -9,6 +9,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::config::get_config,
             commands::network::get_network_info,
+            commands::update::perform_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

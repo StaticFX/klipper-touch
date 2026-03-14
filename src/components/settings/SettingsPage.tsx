@@ -7,7 +7,7 @@ import { usePrinterStore } from "@/stores/printer-store";
 import { checkForUpdate, REPO_URL, type UpdateInfo } from "@/lib/update-checker";
 import {
   ChevronLeft, ChevronRight, Sun, Moon, Wifi, RefreshCw, Info, Palette,
-  PlugZap, ExternalLink, ArrowUpCircle, Loader2,
+  PlugZap, ExternalLink, ArrowUpCircle, Loader2, Download,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -103,12 +103,25 @@ function NetworkSub() {
 function AboutSub() {
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   const [checking, setChecking] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   const check = () => {
     setChecking(true);
     checkForUpdate()
       .then(setUpdate)
       .finally(() => setChecking(false));
+  };
+
+  const performUpdate = () => {
+    setUpdating(true);
+    setUpdateError(null);
+    invoke<string>("perform_update")
+      .catch((err) => {
+        setUpdateError(String(err));
+        setUpdating(false);
+      });
+    // If successful, the service restarts and the app reloads
   };
 
   useEffect(() => { check(); }, []);
@@ -126,7 +139,7 @@ function AboutSub() {
       <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Updates</span>
-          <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5" disabled={checking} onClick={check}>
+          <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5" disabled={checking || updating} onClick={check}>
             {checking ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
             Check
           </Button>
@@ -139,11 +152,25 @@ function AboutSub() {
               value={update.latestVersion ? `v${update.latestVersion}` : "Unknown"}
             />
             {update.updateAvailable && (
-              <div className="flex items-center gap-2 mt-1 p-2 rounded-lg bg-primary/10 border border-primary/20">
-                <ArrowUpCircle size={16} className="text-primary shrink-0" />
-                <span className="text-xs text-primary font-medium flex-1">
-                  Update available: v{update.latestVersion}
-                </span>
+              <div className="space-y-2 mt-1">
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 border border-primary/20">
+                  <ArrowUpCircle size={16} className="text-primary shrink-0" />
+                  <span className="text-xs text-primary font-medium flex-1">
+                    Update available: v{update.latestVersion}
+                  </span>
+                </div>
+                <Button
+                  className="w-full gap-2"
+                  size="sm"
+                  disabled={updating}
+                  onClick={performUpdate}
+                >
+                  {updating ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                  {updating ? "Updating..." : "Install Update"}
+                </Button>
+                {updateError && (
+                  <div className="text-xs text-destructive mt-1">{updateError}</div>
+                )}
               </div>
             )}
             {update.latestVersion && !update.updateAvailable && (
