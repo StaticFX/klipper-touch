@@ -215,8 +215,9 @@ install_service() {
   sudo tee "/etc/systemd/system/${SERVICE_NAME}@.service" > /dev/null << UNIT
 [Unit]
 Description=Klipper Touch UI
-After=moonraker.service network-online.target
+After=moonraker.service network-online.target seatd.service
 Wants=moonraker.service
+Requires=seatd.service
 
 [Service]
 Type=simple
@@ -224,9 +225,9 @@ User=%i
 PAMName=login
 TTYPath=/dev/tty7
 Environment=XDG_RUNTIME_DIR=/run/user/%U
-Environment=WLR_LIBINPUT_NO_DEVICES=1
 Environment=WLR_DRM_NO_MODIFIERS=1
-Environment=WEBKIT_DISABLE_COMPOSITING_MODE=1
+Environment=WLR_RENDERER=gles2
+Environment=WEBKIT_FORCE_SANDBOX=0
 ExecStartPre=+/bin/mkdir -p /run/user/%U
 ExecStartPre=+/bin/chown %i:%i /run/user/%U
 ExecStartPre=+/bin/chmod 700 /run/user/%U
