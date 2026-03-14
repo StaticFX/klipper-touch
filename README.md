@@ -1,6 +1,6 @@
 # Klipper Touch
 
-A modern touchscreen UI for Klipper 3D printers, built to replace KlipperScreen.
+A modern touchscreen UI for Klipper 3D printers.
 
 ![Klipper Touch Screenshot](docs/dashboard.png)
 <!-- TODO: Add screenshot -->
@@ -19,35 +19,23 @@ A modern touchscreen UI for Klipper 3D printers, built to replace KlipperScreen.
 - **Settings** -- Theme switching (light/dark), Moonraker connection, network info
 - **Emergency stop** -- Always accessible from the status bar
 
-## Requirements
-
-- **Raspberry Pi** (tested on Pi 4/5) with a DSI or HDMI touchscreen (e.g., Waveshare 4.3" 800x480)
-- **Klipper** with **Moonraker** API enabled
-- Debian-based OS (Raspberry Pi OS, Armbian, etc.)
-- No desktop environment required -- runs in a Cage Wayland kiosk
-
 ## Quick Install
 
 On your Raspberry Pi (ARM64, Debian/Ubuntu), run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/StaticFX/klipper-touch/master/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/devin/klipper-touch/main/scripts/install.sh | bash
 ```
 
-Or with a custom Moonraker URL:
-
-```bash
-MOONRAKER_URL=http://192.168.1.100:7125 \
-  curl -fsSL https://raw.githubusercontent.com/StaticFX/klipper-touch/master/scripts/install.sh | bash
-```
+Or with options:
 
 The installer will:
 
 1. Check system compatibility (ARM64, Debian/Ubuntu)
-2. Install runtime dependencies (WebKitGTK, Cage, fonts)
-3. Download the latest `.deb` from GitHub Releases
+2. Install system dependencies (WebKitGTK, Cage, fonts)
+3. Download the latest `.deb` release from GitHub
 4. Create a default config at `~/.config/klipper-touch/config.toml`
-5. Install and enable a systemd service
+5. Install and start a systemd service
 6. Optionally disable KlipperScreen if it is running
 
 ## Development
@@ -134,35 +122,6 @@ Each macro entry supports:
 | `gcode` | GCode to send (supports `\n` for multi-line) |
 | `color` | Hex color for the button |
 | `confirm` | Whether to show a confirmation dialog before executing |
-
-## Architecture
-
-```
-+------------------+      WebSocket / REST       +------------+       Serial        +--------+
-|                  | <-------------------------> |            | <------------------> |        |
-|   Klipper Touch  |    Moonraker JSON-RPC API   |  Moonraker |    Klipper API      | Klipper|
-|   (Tauri + React)|                             |            |                     |        |
-+------------------+                             +------------+                     +--------+
-```
-
-**Frontend** (React 19 + TypeScript):
-
-- UI components built with shadcn/ui and Tailwind CSS
-- State management via Zustand stores
-- Real-time temperature charts with uPlot
-- 3D bed mesh visualization on HTML Canvas
-
-**Backend** (Tauri v2 / Rust):
-
-- Thin native shell using WebKitGTK for rendering
-- WebSocket plugin for persistent Moonraker connection
-- HTTP plugin for REST API calls
-- Runs fullscreen in Cage Wayland compositor (no desktop environment needed)
-
-**Communication**:
-
-- WebSocket for live printer state updates (temperatures, position, print progress)
-- REST for one-shot actions (start print, send GCode, upload files)
 
 ## Systemd Service
 
