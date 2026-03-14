@@ -104,7 +104,7 @@ function ErrorBanner({
   const iconColor = color === "red" ? "text-red-500" : "text-orange-500";
 
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+    <div className="absolute inset-0 z-40 flex items-center justify-center bg-background/95">
       <div className="mx-4 max-w-md w-full space-y-3">
         <div className={`rounded-xl border p-6 space-y-3 ${bg}`}>
           <div className="flex items-center gap-3">
@@ -129,7 +129,7 @@ function ErrorBanner({
 
 function InfoBanner({ title, message }: { title: string; message: string }) {
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+    <div className="absolute inset-0 z-40 flex items-center justify-center bg-background/95">
       <div className="mx-4 max-w-md w-full rounded-xl border border-primary/30 bg-primary/10 p-6 space-y-3">
         <h2 className="text-lg font-semibold text-primary">{title}</h2>
         <p className="text-sm text-foreground">{message}</p>

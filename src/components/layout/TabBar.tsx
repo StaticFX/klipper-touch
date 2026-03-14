@@ -24,7 +24,7 @@ export function TabBar() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex-1 flex flex-col items-center justify-center py-2 min-h-[52px] transition-colors",
+              "flex-1 flex flex-col items-center justify-center py-2 min-h-[52px]",
               "active:scale-95 active:bg-accent",
               activeTab === tab.id
                 ? "text-primary"

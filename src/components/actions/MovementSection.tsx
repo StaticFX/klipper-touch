@@ -45,7 +45,7 @@ function MovementSettings({ onBack }: { onBack: () => void }) {
               <button
                 key={label}
                 onClick={() => setter(!value)}
-                className={`flex-1 h-12 rounded-lg border text-sm font-medium transition-colors ${
+                className={`flex-1 h-12 rounded-lg border text-sm font-medium ${
                   value
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-card border-border text-muted-foreground"

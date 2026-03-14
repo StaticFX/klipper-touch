@@ -169,7 +169,7 @@ function FileCard({
           e.stopPropagation();
           onDelete();
         }}
-        className="p-2 rounded-lg text-muted-foreground active:scale-90 active:text-destructive transition-all shrink-0"
+        className="p-2 rounded-lg text-muted-foreground active:scale-90 active:text-destructive shrink-0"
       >
         <Trash2 size={18} />
       </button>

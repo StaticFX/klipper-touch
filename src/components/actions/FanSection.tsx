@@ -105,7 +105,7 @@ function FanRow({ fanKey, info }: { fanKey: string; info: FanInfo }) {
         /* Read-only progress bar for automatic fans */
         <div className="h-2 rounded-full bg-muted overflow-hidden">
           <div
-            className="h-full bg-cyan-500/60 rounded-full transition-all"
+            className="h-full bg-cyan-500/60 rounded-full"
             style={{ width: `${pct}%` }}
           />
         </div>

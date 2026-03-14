@@ -55,7 +55,7 @@ export function ActionsPage() {
           <button
             key={item.id}
             onClick={() => setActive(item.id)}
-            className="flex items-center gap-3 px-4 py-3.5 border-b border-border active:bg-accent/50 transition-colors"
+            className="flex items-center gap-3 px-4 py-3.5 border-b border-border active:bg-accent/50"
           >
             <Icon size={18} className="text-muted-foreground shrink-0" />
             <span className="flex-1 text-sm font-medium text-left">{item.title}</span>

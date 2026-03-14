@@ -22,7 +22,7 @@ export function PrintProgress() {
 
       <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
         <div
-          className="h-full bg-primary rounded-full transition-all duration-500"
+          className="h-full bg-primary rounded-full"
           style={{ width: `${pct}%` }}
         />
       </div>

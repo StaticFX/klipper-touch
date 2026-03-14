@@ -35,7 +35,7 @@ export function TemperatureCard({ label, current, target, power, heater }: Tempe
           {power > 0 && (
             <div className="w-8 h-1.5 rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full bg-primary rounded-full transition-all"
+                className="h-full bg-primary rounded-full"
                 style={{ width: `${power * 100}%` }}
               />
             </div>
