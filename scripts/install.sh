@@ -225,6 +225,8 @@ PAMName=login
 TTYPath=/dev/tty7
 Environment=XDG_RUNTIME_DIR=/run/user/%U
 Environment=WLR_LIBINPUT_NO_DEVICES=1
+Environment=WLR_DRM_NO_MODIFIERS=1
+Environment=WEBKIT_DISABLE_COMPOSITING_MODE=1
 ExecStartPre=+/bin/mkdir -p /run/user/%U
 ExecStartPre=+/bin/chown %i:%i /run/user/%U
 ExecStartPre=+/bin/chmod 700 /run/user/%U
@@ -264,6 +266,13 @@ handle_klipperscreen() {
   fi
 }
 
+# ── Start service ────────────────────────────────────────────────────────────
+start_service() {
+  info "Starting Klipper Touch..."
+  sudo systemctl restart "${SERVICE_NAME}@${USER}.service"
+  success "Service started."
+}
+
 # ── Summary ──────────────────────────────────────────────────────────────────
 print_summary() {
   printf "\n${BOLD}${GREEN}"
@@ -299,6 +308,7 @@ main() {
   create_config
   install_service
   handle_klipperscreen
+  start_service
   print_summary
 }
 
