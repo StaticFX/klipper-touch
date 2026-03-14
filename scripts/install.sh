@@ -2,6 +2,8 @@
 # Klipper Touch installer — run on a Raspberry Pi:
 #   curl -fsSL https://raw.githubusercontent.com/StaticFX/klipper-touch/master/scripts/install.sh | bash
 #
+# Requires: Raspberry Pi OS Bookworm (Debian 12) or newer, ARM64
+#
 # Environment variables:
 #   MOONRAKER_URL          — Moonraker address    (default: http://localhost:7125)
 #   KLIPPER_TOUCH_VERSION  — release tag to install (default: latest)
@@ -12,7 +14,6 @@ REPO="StaticFX/klipper-touch"
 GITHUB_API="https://api.github.com/repos/${REPO}"
 MOONRAKER_URL="${MOONRAKER_URL:-http://localhost:7125}"
 KLIPPER_TOUCH_VERSION="${KLIPPER_TOUCH_VERSION:-}"
-INSTALL_DIR="/opt/klipper-touch"
 SERVICE_NAME="klipper-touch"
 CONFIG_DIR="${HOME}/.config/klipper-touch"
 
@@ -74,24 +75,25 @@ check_system() {
     *) error "Unsupported distribution: ${PRETTY_NAME:-unknown}. Debian/Ubuntu required." ;;
   esac
 
+  # Check Debian version — need Bookworm (12) or newer for libwebkit2gtk-4.1
+  local version_id="${VERSION_ID:-0}"
+  if [ "${version_id}" -lt 12 ] 2>/dev/null; then
+    error "Debian ${version_id} (${VERSION_CODENAME:-}) is too old. Klipper Touch requires Bookworm (Debian 12) or newer for libwebkit2gtk-4.1. Please upgrade your Raspberry Pi OS."
+  fi
+
   success "System OK: ${PRETTY_NAME} (${arch})"
 }
 
-# ── Install runtime dependencies ─────────────────────────────────────────────
-install_deps() {
-  info "Installing runtime dependencies..."
-
-  sudo apt-get update -qq
-  sudo apt-get install -y -qq \
-    libwebkit2gtk-4.1-0 \
-    cage \
-    libgtk-3-0 \
-    libayatana-appindicator3-1 \
-    fonts-noto-core \
-    curl \
-    jq
-
-  success "Dependencies installed."
+# ── Install minimal tools needed for the script itself ───────────────────────
+install_script_deps() {
+  for cmd in curl jq; do
+    if ! command -v "${cmd}" &>/dev/null; then
+      info "Installing ${cmd}..."
+      sudo apt-get update -qq
+      sudo apt-get install -y -qq curl jq
+      break
+    fi
+  done
 }
 
 # ── Resolve version ─────────────────────────────────────────────────────────
@@ -113,7 +115,7 @@ resolve_version() {
   KLIPPER_TOUCH_VERSION="$(echo "${response}" | jq -r '.tag_name')"
 
   if [ -z "${KLIPPER_TOUCH_VERSION}" ] || [ "${KLIPPER_TOUCH_VERSION}" = "null" ]; then
-    error "No releases found at github.com/${REPO}. Ask the maintainer to create a release first."
+    error "No releases found at github.com/${REPO}. Create a release by pushing a v* tag."
   fi
 
   success "Latest version: ${KLIPPER_TOUCH_VERSION}"
@@ -133,23 +135,30 @@ install_deb() {
   asset_url="$(echo "${release_json}" | jq -r '.assets[] | select(.name | endswith(".deb")) | .browser_download_url' | head -n1)"
 
   if [ -z "${asset_url}" ] || [ "${asset_url}" = "null" ]; then
-    error "No .deb package found in release ${KLIPPER_TOUCH_VERSION}. Available assets: $(echo "${release_json}" | jq -r '.assets[].name' | tr '\n' ', ')"
+    error "No .deb package found in release ${KLIPPER_TOUCH_VERSION}."
   fi
 
   local deb_file="${TMP_DIR}/klipper-touch.deb"
-  info "Downloading $(basename "${asset_url}")..."
   curl -fsSL -o "${deb_file}" "${asset_url}" || \
     error "Failed to download .deb from ${asset_url}"
+  success "Downloaded $(basename "${asset_url}")"
 
-  success "Downloaded."
-
-  info "Installing package..."
-  sudo dpkg -i "${deb_file}" || {
-    warn "dpkg reported issues, attempting to fix dependencies..."
-    sudo apt-get install -f -y
-  }
-
+  info "Installing package (apt will pull runtime dependencies)..."
+  sudo apt-get update -qq
+  sudo apt-get install -y -qq "${deb_file}"
   success "Package installed."
+}
+
+# ── Install cage (kiosk compositor) ──────────────────────────────────────────
+install_cage() {
+  if command -v cage &>/dev/null; then
+    success "Cage already installed."
+    return
+  fi
+
+  info "Installing cage (Wayland kiosk compositor)..."
+  sudo apt-get install -y -qq cage
+  success "Cage installed."
 }
 
 # ── Create default config ────────────────────────────────────────────────────
@@ -185,10 +194,22 @@ TOML
 install_service() {
   info "Installing systemd service..."
 
-  # Find the binary — dpkg puts it in /usr/bin, fallback to /opt
-  local bin_path="/usr/bin/klipper-touch"
-  if [ ! -f "${bin_path}" ]; then
-    bin_path="${INSTALL_DIR}/klipper-touch"
+  # Find the binary
+  local bin_path=""
+  for p in /usr/bin/klipper-touch /opt/klipper-touch/klipper-touch; do
+    if [ -f "${p}" ]; then
+      bin_path="${p}"
+      break
+    fi
+  done
+
+  if [ -z "${bin_path}" ]; then
+    # dpkg might put it somewhere else — find it
+    bin_path="$(dpkg -L klipper-touch 2>/dev/null | grep '/klipper-touch$' | head -n1)" || true
+    if [ -z "${bin_path}" ]; then
+      bin_path="/usr/bin/klipper-touch"
+      warn "Could not locate binary, assuming ${bin_path}"
+    fi
   fi
 
   sudo tee "/etc/systemd/system/${SERVICE_NAME}@.service" > /dev/null << UNIT
@@ -200,8 +221,13 @@ Wants=moonraker.service
 [Service]
 Type=simple
 User=%i
+PAMName=login
+TTYPath=/dev/tty7
 Environment=XDG_RUNTIME_DIR=/run/user/%U
 Environment=WLR_LIBINPUT_NO_DEVICES=1
+ExecStartPre=/bin/mkdir -p /run/user/%U
+ExecStartPre=/bin/chown %i:%i /run/user/%U
+ExecStartPre=/bin/chmod 700 /run/user/%U
 ExecStart=/usr/bin/cage -s -- ${bin_path}
 Restart=on-failure
 RestartSec=5
@@ -266,9 +292,10 @@ ART
 main() {
   banner
   check_system
-  install_deps
+  install_script_deps
   resolve_version
   install_deb
+  install_cage
   create_config
   install_service
   handle_klipperscreen
