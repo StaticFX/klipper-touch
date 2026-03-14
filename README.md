@@ -2,7 +2,7 @@
 
 A modern touchscreen UI for Klipper 3D printers, built to replace KlipperScreen.
 
-![Klipper Touch Screenshot](docs/screenshot.png)
+![Klipper Touch Screenshot](docs/dashboard.png)
 <!-- TODO: Add screenshot -->
 
 ---
@@ -31,14 +31,14 @@ A modern touchscreen UI for Klipper 3D printers, built to replace KlipperScreen.
 On your Raspberry Pi (ARM64, Debian/Ubuntu), run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/devin/klipper-touch/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/StaticFX/klipper-touch/main/scripts/install.sh | bash
 ```
 
 Or with options:
 
 ```bash
 MOONRAKER_URL=http://192.168.1.100:7125 KLIPPER_TOUCH_VERSION=v0.1.0 \
-  curl -fsSL https://raw.githubusercontent.com/devin/klipper-touch/main/scripts/install.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/StaticFX/klipper-touch/main/scripts/install.sh | bash
 ```
 
 The installer will:

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Klipper Touch installer — can be curl-piped on a fresh Raspberry Pi:
-#   curl -fsSL https://raw.githubusercontent.com/devin/klipper-touch/main/scripts/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/StaticFX/klipper-touch/main/scripts/install.sh | bash
 #
 # Environment variables:
 #   KLIPPER_TOUCH_VERSION  — release tag to install (default: latest)
@@ -8,7 +8,7 @@
 set -euo pipefail
 
 # ── Configuration ────────────────────────────────────────────────────────────
-REPO="devin/klipper-touch"
+REPO="StaticFX/klipper-touch"
 GITHUB_API="https://api.github.com/repos/${REPO}"
 MOONRAKER_URL="${MOONRAKER_URL:-http://localhost:7125}"
 KLIPPER_TOUCH_VERSION="${KLIPPER_TOUCH_VERSION:-}"
