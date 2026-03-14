@@ -1,0 +1,16 @@
+[Unit]
+Description=Klipper Touch UI
+After=moonraker.service network-online.target
+Wants=moonraker.service
+
+[Service]
+Type=simple
+User=%i
+Environment=XDG_RUNTIME_DIR=/run/user/%U
+Environment=WLR_LIBINPUT_NO_DEVICES=1
+ExecStart=/usr/bin/cage -s -- /opt/klipper-touch/klipper-touch
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical.target

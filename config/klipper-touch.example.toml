@@ -1,0 +1,31 @@
+# Klipper Touch configuration
+# Copy to ~/.config/klipper-touch/config.toml
+
+moonraker_url = "http://192.168.178.35:7125"
+
+# Theme: "light" or "dark"
+theme = "light"
+
+[[macros]]
+name = "QGL"
+gcode = "QUAD_GANTRY_LEVEL"
+color = "#3b82f6"
+confirm = true
+
+[[macros]]
+name = "Bed Mesh"
+gcode = "BED_MESH_CALIBRATE"
+color = "#8b5cf6"
+confirm = false
+
+[[macros]]
+name = "Clean Nozzle"
+gcode = "CLEAN_NOZZLE"
+color = "#f97316"
+confirm = false
+
+[[macros]]
+name = "Park"
+gcode = "G28\nG0 X150 Y150 Z50 F6000"
+color = "#22c55e"
+confirm = false
