@@ -161,6 +161,18 @@ install_cage() {
   success "Cage installed."
 }
 
+# ── Install virtual keyboard ────────────────────────────────────────────────
+install_keyboard() {
+  if command -v squeekboard &>/dev/null; then
+    success "Virtual keyboard already installed."
+    return
+  fi
+
+  info "Installing squeekboard (on-screen keyboard)..."
+  sudo apt-get install -y -qq squeekboard
+  success "Virtual keyboard installed."
+}
+
 # ── Create default config ────────────────────────────────────────────────────
 create_config() {
   if [ -f "${CONFIG_DIR}/config.toml" ]; then
@@ -231,7 +243,7 @@ Environment=WEBKIT_FORCE_SANDBOX=0
 ExecStartPre=+/bin/mkdir -p /run/user/%U
 ExecStartPre=+/bin/chown %i:%i /run/user/%U
 ExecStartPre=+/bin/chmod 700 /run/user/%U
-ExecStart=/usr/bin/cage -s -- ${bin_path}
+ExecStart=/usr/bin/cage -s -- sh -c "squeekboard & exec ${bin_path}"
 Restart=on-failure
 RestartSec=5
 
@@ -306,6 +318,7 @@ main() {
   resolve_version
   install_deb
   install_cage
+  install_keyboard
   create_config
   install_service
   handle_klipperscreen
