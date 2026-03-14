@@ -31,23 +31,23 @@ A modern touchscreen UI for Klipper 3D printers, built to replace KlipperScreen.
 On your Raspberry Pi (ARM64, Debian/Ubuntu), run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/StaticFX/klipper-touch/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/StaticFX/klipper-touch/master/scripts/install.sh | bash
 ```
 
-Or with options:
+Or with a custom Moonraker URL:
 
 ```bash
-MOONRAKER_URL=http://192.168.1.100:7125 KLIPPER_TOUCH_VERSION=v0.1.0 \
-  curl -fsSL https://raw.githubusercontent.com/StaticFX/klipper-touch/main/scripts/install.sh | bash
+MOONRAKER_URL=http://192.168.1.100:7125 \
+  curl -fsSL https://raw.githubusercontent.com/StaticFX/klipper-touch/master/scripts/install.sh | bash
 ```
 
 The installer will:
 
 1. Check system compatibility (ARM64, Debian/Ubuntu)
-2. Install system dependencies (WebKitGTK, Cage, fonts)
-3. Download the latest `.deb` release from GitHub
+2. Install runtime dependencies (WebKitGTK, Cage, fonts)
+3. Download the latest `.deb` from GitHub Releases
 4. Create a default config at `~/.config/klipper-touch/config.toml`
-5. Install and start a systemd service
+5. Install and enable a systemd service
 6. Optionally disable KlipperScreen if it is running
 
 ## Development
