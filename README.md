@@ -1,7 +1,186 @@
-# Tauri + React + Typescript
+# Klipper Touch
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+A modern touchscreen UI for Klipper 3D printers, built to replace KlipperScreen.
 
-## Recommended IDE Setup
+![Klipper Touch Screenshot](docs/screenshot.png)
+<!-- TODO: Add screenshot -->
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+---
+
+## Features
+
+- **Dashboard** -- Live hotend and bed temperatures with real-time uPlot charts, printer status at a glance
+- **Print control** -- File browser with GCode thumbnails, start/pause/cancel, live progress with ETA
+- **Movement** -- XY jog pad with Z controls, configurable step sizes and speeds, axis inversion
+- **Fan control** -- Auto-discovers all fans from Klipper config; sliders for controllable fans, read-only display for automatic fans
+- **Extruder** -- Temperature presets, extrude/retract, filament load/unload, flow rate display
+- **Bed mesh** -- Interactive 3D surface visualizer with touch rotation, Z exaggeration slider, color-coded height map
+- **Macros** -- Auto-discovers macros from Klipper, parses parameters with defaults, confirmation dialogs
+- **Settings** -- Theme switching (light/dark), Moonraker connection, network info
+- **Emergency stop** -- Always accessible from the status bar
+
+## Requirements
+
+- **Raspberry Pi** (tested on Pi 4/5) with a DSI or HDMI touchscreen (e.g., Waveshare 4.3" 800x480)
+- **Klipper** with **Moonraker** API enabled
+- Debian-based OS (Raspberry Pi OS, Armbian, etc.)
+- No desktop environment required -- runs in a Cage Wayland kiosk
+
+## Quick Install
+
+On your Raspberry Pi (ARM64, Debian/Ubuntu), run:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/devin/klipper-touch/main/scripts/install.sh | bash
+```
+
+Or with options:
+
+```bash
+MOONRAKER_URL=http://192.168.1.100:7125 KLIPPER_TOUCH_VERSION=v0.1.0 \
+  curl -fsSL https://raw.githubusercontent.com/devin/klipper-touch/main/scripts/install.sh | bash
+```
+
+The installer will:
+
+1. Check system compatibility (ARM64, Debian/Ubuntu)
+2. Install system dependencies (WebKitGTK, Cage, fonts)
+3. Download the latest `.deb` release from GitHub
+4. Create a default config at `~/.config/klipper-touch/config.toml`
+5. Install and start a systemd service
+6. Optionally disable KlipperScreen if it is running
+
+## Development
+
+### Prerequisites
+
+- [Bun](https://bun.sh/) (JavaScript runtime and package manager)
+- [Rust](https://rustup.rs/) toolchain (stable)
+- System libraries for Tauri v2: `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `libayatana-appindicator3-dev`
+
+### Setup
+
+```bash
+bun install
+```
+
+### Run in development mode
+
+```bash
+bun run tauri dev
+```
+
+This starts the Vite dev server with hot reload and opens the Tauri window. The default dev config points to Moonraker at `http://192.168.178.35:7125` -- edit `config.dev.toml` to match your printer.
+
+### Lint
+
+```bash
+bun run lint
+```
+
+## Building
+
+Build a release binary and `.deb` package:
+
+```bash
+bun run tauri build
+```
+
+Outputs are placed in `src-tauri/target/release/bundle/`:
+
+- `deb/klipper-touch_<version>_<arch>.deb` -- Debian package for direct installation
+- The release binary is at `src-tauri/target/release/klipper-touch`
+
+### Cross-compiling for Raspberry Pi
+
+If building on a non-ARM host, set up a cross-compilation toolchain for `aarch64-unknown-linux-gnu` or `armv7-unknown-linux-gnueabihf` and pass the appropriate `--target` flag to `cargo`.
+
+## Configuration
+
+Configuration lives at `~/.config/klipper-touch/config.toml`. An example is provided at `config/klipper-touch.example.toml`.
+
+```toml
+# Moonraker URL (required)
+moonraker_url = "http://localhost:7125"
+
+# Theme: "light" or "dark"
+theme = "dark"
+
+# Custom macros (optional)
+[[macros]]
+name = "QGL"
+gcode = "QUAD_GANTRY_LEVEL"
+color = "#3b82f6"
+confirm = true
+
+[[macros]]
+name = "Bed Mesh"
+gcode = "BED_MESH_CALIBRATE"
+color = "#8b5cf6"
+confirm = false
+```
+
+| Key | Description | Default |
+|-----|-------------|---------|
+| `moonraker_url` | Full URL to your Moonraker instance | `http://localhost:7125` |
+| `theme` | UI theme (`"light"` or `"dark"`) | `"light"` |
+| `[[macros]]` | Array of custom macro buttons | none |
+
+Each macro entry supports:
+
+| Key | Description |
+|-----|-------------|
+| `name` | Display name on the button |
+| `gcode` | GCode to send (supports `\n` for multi-line) |
+| `color` | Hex color for the button |
+| `confirm` | Whether to show a confirmation dialog before executing |
+
+## Architecture
+
+```
++------------------+      WebSocket / REST       +------------+       Serial        +--------+
+|                  | <-------------------------> |            | <------------------> |        |
+|   Klipper Touch  |    Moonraker JSON-RPC API   |  Moonraker |    Klipper API      | Klipper|
+|   (Tauri + React)|                             |            |                     |        |
++------------------+                             +------------+                     +--------+
+```
+
+**Frontend** (React 19 + TypeScript):
+
+- UI components built with shadcn/ui and Tailwind CSS
+- State management via Zustand stores
+- Real-time temperature charts with uPlot
+- 3D bed mesh visualization on HTML Canvas
+
+**Backend** (Tauri v2 / Rust):
+
+- Thin native shell using WebKitGTK for rendering
+- WebSocket plugin for persistent Moonraker connection
+- HTTP plugin for REST API calls
+- Runs fullscreen in Cage Wayland compositor (no desktop environment needed)
+
+**Communication**:
+
+- WebSocket for live printer state updates (temperatures, position, print progress)
+- REST for one-shot actions (start print, send GCode, upload files)
+
+## Systemd Service
+
+The service file runs Klipper Touch inside a Cage Wayland kiosk:
+
+```
+ExecStart=/usr/bin/cage -s -- /opt/klipper-touch/klipper-touch
+```
+
+Manage it with:
+
+```bash
+sudo systemctl start klipper-touch@$USER
+sudo systemctl stop klipper-touch@$USER
+sudo systemctl status klipper-touch@$USER
+journalctl -u klipper-touch@$USER -f   # view logs
+```
+
+## License
+
+MIT

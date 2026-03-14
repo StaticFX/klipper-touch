@@ -5,13 +5,13 @@ import { usePrinterStore } from "@/stores/printer-store";
 import { useUiStore } from "@/stores/ui-store";
 import { setTemperature } from "@/lib/moonraker/client";
 import { NumericKeypad } from "@/components/common/NumericKeypad";
-import { ArrowDownToLine, ArrowUpFromLine, Flame, Droplets } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, Flame, Droplets, Loader2 } from "lucide-react";
 
 const FEED_LENGTHS = [1, 5, 10, 25, 50];
 const FEED_SPEEDS = [1, 3, 5, 10]; // mm/s
 
 export function ExtruderSection() {
-  const { send } = useGcode();
+  const { send, busy } = useGcode();
   const showConfirm = useUiStore((s) => s.showConfirm);
   const extruder = usePrinterStore((s) => s.extruder);
   const extrudeFactor = usePrinterStore((s) => s.gcode_move.extrude_factor);
@@ -110,22 +110,24 @@ export function ExtruderSection() {
 
       {/* Extrude / Retract */}
       <div className="grid grid-cols-2 gap-2">
-        <Button variant="outline" className="h-12 text-sm" onClick={() => extrude(-1)}>
+        <Button variant="outline" className="h-12 text-sm" disabled={busy} onClick={() => extrude(-1)}>
+          {busy ? <Loader2 size={16} className="animate-spin" /> : null}
           Retract
         </Button>
-        <Button variant="outline" className="h-12 text-sm" onClick={() => extrude(1)}>
+        <Button variant="outline" className="h-12 text-sm" disabled={busy} onClick={() => extrude(1)}>
+          {busy ? <Loader2 size={16} className="animate-spin" /> : null}
           Extrude
         </Button>
       </div>
 
       {/* Load / Unload */}
       <div className="grid grid-cols-2 gap-2">
-        <Button variant="secondary" className="h-12 text-sm" onClick={loadFilament}>
-          <ArrowDownToLine size={16} />
+        <Button variant="secondary" className="h-12 text-sm" disabled={busy} onClick={loadFilament}>
+          {busy ? <Loader2 size={16} className="animate-spin" /> : <ArrowDownToLine size={16} />}
           Load
         </Button>
-        <Button variant="secondary" className="h-12 text-sm" onClick={unloadFilament}>
-          <ArrowUpFromLine size={16} />
+        <Button variant="secondary" className="h-12 text-sm" disabled={busy} onClick={unloadFilament}>
+          {busy ? <Loader2 size={16} className="animate-spin" /> : <ArrowUpFromLine size={16} />}
           Unload
         </Button>
       </div>

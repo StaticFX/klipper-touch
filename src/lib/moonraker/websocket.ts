@@ -66,7 +66,7 @@ export class MoonrakerWebSocket {
     this.onConnection = onConnection;
     this.onKlippy = onKlippy;
     this.onHostname = onHostname;
-    instance = this;
+    instance = this; // eslint-disable-line @typescript-eslint/no-this-alias
   }
 
   /** Send a JSON-RPC call and return the result as a promise. */

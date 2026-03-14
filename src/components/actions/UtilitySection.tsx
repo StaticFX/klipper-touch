@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { useGcode } from "@/hooks/use-gcode";
 import { useUiStore } from "@/stores/ui-store";
-import { Power, RotateCcw, Crosshair, Grid3X3 } from "lucide-react";
+import { Power, RotateCcw, Crosshair, Grid3X3, Loader2 } from "lucide-react";
 
 export function UtilitySection() {
-  const { send } = useGcode();
+  const { send, busy } = useGcode();
   const showConfirm = useUiStore((s) => s.showConfirm);
 
   const actions = [
@@ -64,9 +64,10 @@ export function UtilitySection() {
             key={a.label}
             variant="outline"
             className="h-14 flex-col gap-1 text-xs"
+            disabled={busy}
             onClick={a.action}
           >
-            <Icon size={18} />
+            {busy ? <Loader2 size={18} className="animate-spin" /> : <Icon size={18} />}
             {a.label}
           </Button>
         );

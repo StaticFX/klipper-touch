@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useGcode } from "@/hooks/use-gcode";
 import { useUiStore } from "@/stores/ui-store";
 import { usePrinterStore } from "@/stores/printer-store";
-import { Grid3X3, RefreshCw } from "lucide-react";
+import { Grid3X3, RefreshCw, Loader2 } from "lucide-react";
 
 /* ── Color helpers ─────────────────────────────────────── */
 
@@ -232,7 +232,7 @@ function drawMesh(
     ctx.beginPath();
     edge.forEach(([x, y, z], i) => {
       const p = project(x, y, z);
-      i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+      if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
     });
     ctx.stroke();
   }
@@ -315,7 +315,7 @@ const MAX_ELEV = Math.PI * 0.45;
 const SCALE_PRESETS = [1, 10, 50, 100, 200];
 
 export function BedMeshSection() {
-  const { send } = useGcode();
+  const { send, busy } = useGcode();
   const showConfirm = useUiStore((s) => s.showConfirm);
   const mesh = usePrinterStore((s) => s.bedMesh);
   const theme = useUiStore((s) => s.theme);
@@ -455,9 +455,9 @@ export function BedMeshSection() {
           <div className="text-sm text-muted-foreground text-center">
             No bed mesh data available
           </div>
-          <Button variant="default" className="h-11" onClick={handleCalibrate}>
-            <RefreshCw size={16} />
-            Run Bed Mesh Calibrate
+          <Button variant="default" className="h-11" disabled={busy} onClick={handleCalibrate}>
+            {busy ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+            {busy ? "Calibrating…" : "Run Bed Mesh Calibrate"}
           </Button>
         </div>
       </div>
@@ -475,9 +475,9 @@ export function BedMeshSection() {
           <Button variant="ghost" className="h-9 text-xs px-2" onClick={handleReset}>
             Reset View
           </Button>
-          <Button variant="outline" className="h-9 text-xs" onClick={handleCalibrate}>
-            <RefreshCw size={14} />
-            Recalibrate
+          <Button variant="outline" className="h-9 text-xs" disabled={busy} onClick={handleCalibrate}>
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+            {busy ? "Calibrating…" : "Recalibrate"}
           </Button>
         </div>
       </div>
