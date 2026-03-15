@@ -1,10 +1,25 @@
+import { useState, useEffect } from "react";
 import { usePrinterStore } from "@/stores/printer-store";
 import { usePrintStore } from "@/stores/print-store";
 import { useUiStore } from "@/stores/ui-store";
 import { emergencyStop } from "@/lib/moonraker/client";
 import { OctagonX } from "lucide-react";
 
+function useViewportDebug() {
+  const [info, setInfo] = useState("");
+  useEffect(() => {
+    const update = () => {
+      setInfo(`${window.innerWidth}x${window.innerHeight} dpr:${window.devicePixelRatio}`);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  return info;
+}
+
 export function StatusBar() {
+  const debug = useViewportDebug();
   const moonraker = usePrinterStore((s) => s.moonrakerConnected);
   const klippy = usePrinterStore((s) => s.klippyState);
   const hostname = usePrinterStore((s) => s.hostname);
@@ -33,6 +48,7 @@ export function StatusBar() {
         <div className={`w-2 h-2 rounded-full ${dotColor}`} />
         {hostname && <span className="font-medium text-foreground">{hostname}</span>}
         <span className="text-muted-foreground">{label}</span>
+        <span className="text-xs text-muted-foreground ml-2">[{debug}]</span>
       </div>
       <div className="flex items-center gap-2">
         <PrinterStatusBadge state={printState} />
