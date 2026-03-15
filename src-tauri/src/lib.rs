@@ -1,6 +1,6 @@
 mod commands;
 
-use tauri::WebviewWindowBuilder;
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -14,21 +14,19 @@ pub fn run() {
             commands::update::perform_update,
         ])
         .setup(|app| {
-            // Access the webview and disable zoom at the WebKit level
-            if let Some(window) = app.webview_windows().values().next() {
-                window.with_webview(|webview| {
-                    #[cfg(target_os = "linux")]
-                    {
-                        use webkit2gtk::prelude::WebViewExt;
-                        use webkit2gtk::prelude::SettingsExt;
-                        if let Some(settings) = webview.inner().settings() {
-                            settings.set_zoom_text_only(false);
-                            settings.set_enable_smooth_scrolling(true);
-                        }
-                        webview.inner().set_zoom_level(1.0);
+            let window = app.get_webview_window("main").unwrap();
+            window.with_webview(|webview| {
+                #[cfg(target_os = "linux")]
+                {
+                    use webkit2gtk::WebViewExt;
+                    use webkit2gtk::SettingsExt;
+                    if let Some(settings) = webview.inner().settings() {
+                        settings.set_zoom_text_only(false);
+                        settings.set_enable_smooth_scrolling(true);
                     }
-                })?;
-            }
+                    webview.inner().set_zoom_level(1.0);
+                }
+            })?;
             Ok(())
         })
         .run(tauri::generate_context!())
