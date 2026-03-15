@@ -403,17 +403,37 @@ export function BedMeshSection() {
     }
     function onMouseUp() { dragging = false; }
 
+    let startX = 0;
+    let startY = 0;
+    let touchLocked = false;
+
     function onTouchStart(e: TouchEvent) {
       if (e.touches.length !== 1) return;
-      dragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; e.preventDefault();
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      lastX = startX;
+      lastY = startY;
+      dragging = false;
+      touchLocked = false;
     }
     function onTouchMove(e: TouchEvent) {
-      if (!dragging || e.touches.length !== 1) return;
+      if (e.touches.length !== 1) return;
       const tx = e.touches[0].clientX, ty = e.touches[0].clientY;
-      onMove(tx - lastX, ty - lastY);
-      lastX = tx; lastY = ty; e.preventDefault();
+      const dx = tx - startX, dy = ty - startY;
+
+      // Lock to rotation if horizontal movement dominates
+      if (!touchLocked && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+        touchLocked = true;
+        dragging = Math.abs(dx) >= Math.abs(dy);
+      }
+
+      if (dragging) {
+        e.preventDefault();
+        onMove(tx - lastX, ty - lastY);
+      }
+      lastX = tx; lastY = ty;
     }
-    function onTouchEnd() { dragging = false; }
+    function onTouchEnd() { dragging = false; touchLocked = false; }
 
     canvas.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mousemove", onMouseMove);
