@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 html, body {
-  touch-action: manipulation;
+  touch-action: pan-x pan-y;
   overscroll-behavior: none;
   -webkit-user-select: none;
   user-select: none;
