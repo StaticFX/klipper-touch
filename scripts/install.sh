@@ -168,17 +168,9 @@ install_cage() {
   success "Cage installed."
 }
 
-# ── Install virtual keyboard ────────────────────────────────────────────────
-install_keyboard() {
-  if command -v squeekboard &>/dev/null; then
-    success "Virtual keyboard already installed."
-    return
-  fi
-
-  info "Installing squeekboard (on-screen keyboard)..."
-  sudo apt-get install -y -qq squeekboard
-  success "Virtual keyboard installed."
-}
+# ── Virtual keyboard note ──────────────────────────────────────────────────
+# Klipper Touch includes a built-in virtual keyboard — no external keyboard
+# (squeekboard, wvkbd, etc.) is needed.
 
 # ── Disable screen blanking ──────────────────────────────────────────────────
 disable_screen_blanking() {
@@ -297,10 +289,11 @@ Environment=WLR_DRM_MODE=${screen_mode:-}
 Environment=WLR_RENDERER=gles2
 Environment=WEBKIT_FORCE_SANDBOX=0
 Environment=WEBKIT_DISABLE_DMABUF_RENDERER=1
+Environment=GTK_IM_MODULE=wayland
 ExecStartPre=+/bin/mkdir -p /run/user/%U
 ExecStartPre=+/bin/chown %i:%i /run/user/%U
 ExecStartPre=+/bin/chmod 700 /run/user/%U
-ExecStart=/usr/bin/cage -s -- sh -c "squeekboard & exec ${bin_path}"
+ExecStart=/usr/bin/cage -s -- ${bin_path}
 Restart=on-failure
 RestartSec=5
 
@@ -395,7 +388,6 @@ main() {
   resolve_version
   install_deb
   install_cage
-  install_keyboard
   create_config
   install_service
   install_sudoers

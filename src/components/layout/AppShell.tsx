@@ -11,6 +11,7 @@ import { ConsolePage } from "@/components/console/ConsolePage";
 import { SettingsPage } from "@/components/settings/SettingsPage";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { ConnectionOverlay } from "@/components/common/ConnectionOverlay";
+import { VirtualKeyboard } from "@/components/common/VirtualKeyboard";
 
 const pages: Record<Tab, React.ComponentType> = {
   dashboard: Dashboard,
@@ -51,7 +52,7 @@ export function AppShell() {
           return (
             <div
               key={tab}
-              className="absolute inset-0 overflow-hidden"
+              className="absolute inset-0 overflow-y-auto"
               style={{ display: activeTab === tab ? "block" : "none" }}
             >
               <Page />
@@ -60,6 +61,7 @@ export function AppShell() {
         })}
       </div>
       {!isPrinting && !showingSummary && <TabBar />}
+      <VirtualKeyboard />
       <ConnectionOverlay />
       {confirmDialog && (
         <ConfirmDialog

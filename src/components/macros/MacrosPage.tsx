@@ -98,15 +98,15 @@ export function MacrosPage() {
   if (selected) {
     const hasParams = Object.keys(selected.params).length > 0;
     return (
-      <div className="flex flex-col h-full">
+      <div>
         <button
           onClick={() => { setSelected(null); setParamValues({}); }}
-          className="flex items-center gap-2 px-3 py-3 text-sm font-medium text-muted-foreground active:bg-accent/50 border-b border-border shrink-0"
+          className="sticky top-0 z-10 flex items-center gap-2 px-3 py-3 text-sm font-medium text-muted-foreground active:bg-accent/50 border-b border-border bg-background w-full"
         >
           <ChevronLeft size={16} />
           Macros
         </button>
-        <div className="flex-1 overflow-y-auto p-3 space-y-4">
+        <div className="p-3 space-y-4">
           <div>
             <div className="text-base font-semibold font-mono">{selected.name}</div>
             {selected.description && (
@@ -143,11 +143,11 @@ export function MacrosPage() {
     );
   }
 
-  // List view
+  // List view — uses parent scroll (no nested scroll container)
   return (
-    <div className="p-3 flex flex-col gap-3 h-full">
-      {/* Search bar */}
-      <div className="flex gap-2 shrink-0">
+    <div className="p-3 space-y-3">
+      {/* Search bar — sticky */}
+      <div className="sticky top-0 z-10 bg-background pt-0 pb-1 flex gap-2">
         <div className="relative flex-1">
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -163,14 +163,14 @@ export function MacrosPage() {
       </div>
 
       {/* Macro count */}
-      <div className="shrink-0">
+      <div>
         <span className="text-xs text-muted-foreground">
           {filtered.length} macro{filtered.length !== 1 ? "s" : ""}
         </span>
       </div>
 
       {/* Macro list */}
-      <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5">
+      <div className="space-y-1.5">
         {filtered.length === 0 ? (
           <div className="text-center text-muted-foreground py-8 text-sm">
             {filter ? "No macros match your search" : "No macros found on printer"}

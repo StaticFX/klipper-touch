@@ -6,7 +6,7 @@ export function Dashboard() {
   const { extruder, bed } = useTemperature();
 
   return (
-    <div className="p-3 flex flex-col gap-3 h-full overflow-y-auto">
+    <div className="p-3 flex flex-col gap-3 h-full">
       <div className="grid grid-cols-2 gap-3 shrink-0">
         <TemperatureCard
           label="Hotend"
