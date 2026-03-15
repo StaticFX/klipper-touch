@@ -38,7 +38,13 @@ export const usePrintStore = create<PrintStore>((set, get) => ({
   updateStatus: (data) => {
     const updates: Partial<PrintStore> = {};
     if (data.print_stats) {
-      updates.print_stats = { ...get().print_stats, ...(data.print_stats as Partial<PrintStats>) };
+      const incoming = data.print_stats as Partial<PrintStats>;
+      const current = get().print_stats;
+      updates.print_stats = {
+        ...current,
+        ...incoming,
+        info: { ...current.info, ...incoming.info },
+      };
     }
     if (data.display_status) {
       updates.display_status = { ...get().display_status, ...(data.display_status as Partial<DisplayStatus>) };
