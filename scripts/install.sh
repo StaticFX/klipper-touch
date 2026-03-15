@@ -315,12 +315,19 @@ UNIT
 
 # ── Sudoers rule for passwordless self-update ────────────────────────────────
 install_sudoers() {
-  info "Setting up passwordless sudo for updates..."
-
   local sudoers_file="/etc/sudoers.d/klipper-touch"
+
+  # Already set up — skip during non-interactive updates to avoid the
+  # chicken-and-egg problem (needs sudo to write the sudoers file).
+  if [ -f "${sudoers_file}" ]; then
+    success "Sudoers rule already exists — skipping."
+    return
+  fi
+
+  info "Setting up passwordless sudo for updates..."
   sudo tee "${sudoers_file}" > /dev/null << SUDOERS
 # Allow klipper-touch user to self-update without a password
-${USER} ALL=(ALL) NOPASSWD: /usr/bin/apt-get, /usr/bin/dpkg, /bin/systemctl restart klipper-touch@*, /bin/systemctl stop klipper-touch@*, /bin/systemctl enable klipper-touch@*, /bin/systemctl disable klipper-touch@*, /bin/systemctl daemon-reload, /usr/bin/tee /etc/systemd/system/klipper-touch@.service, /usr/bin/tee /etc/udev/rules.d/99-klipper-touch-noblank.rules, /usr/bin/sed *
+${USER} ALL=(ALL) NOPASSWD: /usr/bin/apt-get, /usr/bin/dpkg, /bin/systemctl, /usr/bin/tee, /usr/bin/sed, /bin/chmod
 SUDOERS
   sudo chmod 0440 "${sudoers_file}"
   success "Sudoers rule installed — updates will not require a password."
