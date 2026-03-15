@@ -1,13 +1,14 @@
 import { useUiStore, type Tab } from "@/stores/ui-store";
 import { cn } from "@/lib/utils";
-import { Home, Play, SlidersHorizontal, Terminal, Settings } from "lucide-react";
+import { Home, Play, SlidersHorizontal, Zap, Terminal, Settings } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 const tabs: { id: Tab; label: string; icon: LucideIcon }[] = [
   { id: "dashboard", label: "Home", icon: Home },
   { id: "print", label: "Print", icon: Play },
   { id: "actions", label: "Actions", icon: SlidersHorizontal },
-  { id: "macros", label: "Macros", icon: Terminal },
+  { id: "macros", label: "Macros", icon: Zap },
+  { id: "console", label: "Console", icon: Terminal },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 

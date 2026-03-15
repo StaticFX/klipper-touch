@@ -5,6 +5,7 @@ type StatusUpdateHandler = (data: Record<string, unknown>) => void;
 type ConnectionHandler = (connected: boolean, error?: string) => void;
 type KlippyHandler = (state: string, message: string) => void;
 type HostnameHandler = (hostname: string) => void;
+type GcodeResponseHandler = (message: string) => void;
 
 interface PendingCall {
   resolve: (result: unknown) => void;
@@ -58,6 +59,7 @@ export class MoonrakerWebSocket {
   private onConnection: ConnectionHandler;
   private onKlippy: KlippyHandler;
   private onHostname: HostnameHandler;
+  private onGcodeResponse: GcodeResponseHandler | null = null;
   private serverInfoId = -1;
   private pending = new Map<number, PendingCall>();
 
@@ -74,6 +76,10 @@ export class MoonrakerWebSocket {
     this.onKlippy = onKlippy;
     this.onHostname = onHostname;
     instance = this; // eslint-disable-line @typescript-eslint/no-this-alias
+  }
+
+  setGcodeResponseHandler(handler: GcodeResponseHandler) {
+    this.onGcodeResponse = handler;
   }
 
   /** Send a JSON-RPC call and return the result as a promise. */
@@ -174,6 +180,15 @@ export class MoonrakerWebSocket {
     }
     if (msg.method === "notify_klippy_shutdown") {
       this.onKlippy("shutdown", "Klipper firmware has shut down");
+      return;
+    }
+
+    // GCode responses
+    if (msg.method === "notify_gcode_response") {
+      const params = msg.params as string[];
+      if (params && params[0] && this.onGcodeResponse) {
+        this.onGcodeResponse(params[0]);
+      }
       return;
     }
 

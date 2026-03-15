@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useUiStore } from "@/stores/ui-store";
 import { usePrinterStore } from "@/stores/printer-store";
 import { usePrintStore } from "@/stores/print-store";
@@ -9,7 +10,7 @@ import { checkForUpdate, REPO_URL, type UpdateInfo } from "@/lib/update-checker"
 import {
   ChevronLeft, ChevronRight, Sun, Moon, Wifi, RefreshCw, Info,
   PlugZap, ExternalLink, ArrowUpCircle, Loader2, Download, Bug,
-  Monitor, Thermometer, Eye, EyeOff,
+  Monitor, Thermometer, Eye, EyeOff, Lock, Signal, Trash2, Check, X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { UpdateModal } from "./UpdateModal";
@@ -19,6 +20,17 @@ interface NetworkInfo {
   ip_address: string | null;
   wifi_ssid: string | null;
   wifi_signal: string | null;
+}
+
+interface WifiNetwork {
+  ssid: string;
+  signal: number;
+  security: string;
+  connected: boolean;
+}
+
+interface SavedNetwork {
+  name: string;
 }
 
 /* ── Sub-pages ────────────────────────────────────────── */
@@ -127,34 +139,214 @@ function ConnectionSub() {
 
 function NetworkSub() {
   const [network, setNetwork] = useState<NetworkInfo | null>(null);
+  const [wifiList, setWifiList] = useState<WifiNetwork[]>([]);
+  const [saved, setSaved] = useState<SavedNetwork[]>([]);
+  const [scanning, setScanning] = useState(false);
+  const [connecting, setConnecting] = useState<string | null>(null);
+  const [passwordSsid, setPasswordSsid] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const refresh = () => {
+  const refreshInfo = () => {
     invoke<NetworkInfo>("get_network_info")
       .then(setNetwork)
       .catch(() => {});
   };
 
+  const scanWifi = () => {
+    setScanning(true);
+    setError(null);
+    invoke<WifiNetwork[]>("scan_wifi")
+      .then(setWifiList)
+      .catch((e) => setError(String(e)))
+      .finally(() => setScanning(false));
+  };
+
+  const loadSaved = () => {
+    invoke<SavedNetwork[]>("list_saved_wifi")
+      .then(setSaved)
+      .catch(() => {});
+  };
+
   useEffect(() => {
-    refresh();
+    refreshInfo();
+    scanWifi();
+    loadSaved();
   }, []);
 
+  const connectToWifi = async (ssid: string, pwd: string) => {
+    setConnecting(ssid);
+    setError(null);
+    try {
+      await invoke<string>("connect_wifi", { ssid, password: pwd });
+      setPasswordSsid(null);
+      setPassword("");
+      // Refresh everything after connecting
+      refreshInfo();
+      scanWifi();
+      loadSaved();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setConnecting(null);
+    }
+  };
+
+  const forgetNetwork = async (name: string) => {
+    setError(null);
+    try {
+      await invoke<string>("forget_wifi", { name });
+      refreshInfo();
+      scanWifi();
+      loadSaved();
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
+  const handleNetworkTap = (net: WifiNetwork) => {
+    if (net.connected) return;
+    // If the network has security and we don't have it saved, ask for password
+    const isSaved = saved.some((s) => s.name === net.ssid);
+    if (net.security && net.security !== "" && net.security !== "--" && !isSaved) {
+      setPasswordSsid(net.ssid);
+      setPassword("");
+    } else {
+      connectToWifi(net.ssid, "");
+    }
+  };
+
+  const signalIcon = (signal: number) => {
+    if (signal >= 70) return <Signal size={14} className="text-green-500" />;
+    if (signal >= 40) return <Signal size={14} className="text-yellow-500" />;
+    return <Signal size={14} className="text-red-500" />;
+  };
+
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Network Info</span>
-        <Button variant="ghost" size="icon-xs" onClick={refresh}>
-          <RefreshCw size={12} />
-        </Button>
+    <div className="space-y-4">
+      {/* Current connection */}
+      <div>
+        <div className="text-xs text-muted-foreground mb-2 font-medium">Current Connection</div>
+        {network ? (
+          <div className="space-y-2">
+            <InfoRow label="Hostname" value={network.hostname} />
+            <InfoRow label="IP Address" value={network.ip_address ?? "N/A"} />
+            <InfoRow label="WiFi" value={network.wifi_ssid ?? "Not connected"} />
+            <InfoRow label="Signal" value={network.wifi_signal ?? "N/A"} />
+          </div>
+        ) : (
+          <span className="text-sm text-muted-foreground">Loading...</span>
+        )}
       </div>
-      {network ? (
-        <div className="space-y-2">
-          <InfoRow label="Hostname" value={network.hostname} />
-          <InfoRow label="IP Address" value={network.ip_address ?? "N/A"} />
-          <InfoRow label="WiFi" value={network.wifi_ssid ?? "N/A"} />
-          <InfoRow label="Signal" value={network.wifi_signal ?? "N/A"} />
+
+      {/* Error display */}
+      {error && (
+        <div className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
+          <X size={14} className="text-destructive shrink-0" />
+          <span className="text-xs text-destructive flex-1">{error}</span>
+          <button onClick={() => setError(null)}>
+            <X size={12} className="text-destructive" />
+          </button>
         </div>
-      ) : (
-        <span className="text-sm text-muted-foreground">Loading...</span>
+      )}
+
+      {/* Password dialog */}
+      {passwordSsid && (
+        <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-3">
+          <div className="text-sm font-medium">Connect to {passwordSsid}</div>
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="WiFi password"
+            className="h-9"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && password) connectToWifi(passwordSsid, password);
+            }}
+          />
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => { setPasswordSsid(null); setPassword(""); }}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              className="flex-1 gap-1.5"
+              disabled={!password || connecting === passwordSsid}
+              onClick={() => connectToWifi(passwordSsid, password)}
+            >
+              {connecting === passwordSsid ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Check size={12} />
+              )}
+              Connect
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Available networks */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-muted-foreground font-medium">Available Networks</span>
+          <Button variant="ghost" size="icon-xs" onClick={scanWifi} disabled={scanning}>
+            {scanning ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+          </Button>
+        </div>
+        <div className="space-y-1">
+          {wifiList.length === 0 && !scanning && (
+            <div className="text-sm text-muted-foreground text-center py-4">
+              No networks found
+            </div>
+          )}
+          {wifiList.map((net) => (
+            <button
+              key={net.ssid}
+              onClick={() => handleNetworkTap(net)}
+              disabled={net.connected || connecting !== null}
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg border border-border active:bg-accent/50 disabled:opacity-60"
+            >
+              {signalIcon(net.signal)}
+              <span className="text-sm flex-1 text-left truncate">{net.ssid}</span>
+              {net.connected && (
+                <Badge variant="default" className="text-[10px] h-5">Connected</Badge>
+              )}
+              {connecting === net.ssid && <Loader2 size={14} className="animate-spin" />}
+              {net.security && net.security !== "" && net.security !== "--" && !net.connected && (
+                <Lock size={12} className="text-muted-foreground" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Saved networks */}
+      {saved.length > 0 && (
+        <div>
+          <div className="text-xs text-muted-foreground mb-2 font-medium">Saved Networks</div>
+          <div className="space-y-1">
+            {saved.map((s) => (
+              <div
+                key={s.name}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border"
+              >
+                <Wifi size={14} className="text-muted-foreground shrink-0" />
+                <span className="text-sm flex-1 truncate">{s.name}</span>
+                <button
+                  onClick={() => forgetNetwork(s.name)}
+                  className="p-1.5 rounded-md active:bg-destructive/10"
+                >
+                  <Trash2 size={14} className="text-destructive" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

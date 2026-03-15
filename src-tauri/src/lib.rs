@@ -11,6 +11,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::config::get_config,
             commands::network::get_network_info,
+            commands::network::scan_wifi,
+            commands::network::connect_wifi,
+            commands::network::forget_wifi,
+            commands::network::list_saved_wifi,
             commands::update::perform_update,
         ])
         .setup(|app| {

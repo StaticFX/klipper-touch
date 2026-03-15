@@ -3,6 +3,7 @@ import { MoonrakerWebSocket } from "@/lib/moonraker/websocket";
 import { setBaseUrl } from "@/lib/moonraker/client";
 import { usePrinterStore } from "@/stores/printer-store";
 import { usePrintStore } from "@/stores/print-store";
+import { useConsoleStore } from "@/stores/console-store";
 import { useUiStore } from "@/stores/ui-store";
 import { getConfig } from "@/lib/config";
 
@@ -42,6 +43,14 @@ export function useMoonraker() {
           usePrinterStore.getState().setHostname(hostname);
         },
       );
+
+      ws.setGcodeResponseHandler((message) => {
+        useConsoleStore.getState().addLine({
+          message,
+          time: Date.now() / 1000,
+          type: "response",
+        });
+      });
 
       wsRef.current = ws;
       ws.connect();

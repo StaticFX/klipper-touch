@@ -120,6 +120,14 @@ html, body, #root {
   display: none;
 }
 
+/* Allow text input/selection on form elements so virtual keyboards (squeekboard) activate */
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+  touch-action: auto;
+}
+
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);

@@ -7,6 +7,7 @@ import { Dashboard } from "@/components/dashboard/Dashboard";
 import { PrintPage } from "@/components/print/PrintPage";
 import { ActionsPage } from "@/components/actions/ActionsPage";
 import { MacrosPage } from "@/components/macros/MacrosPage";
+import { ConsolePage } from "@/components/console/ConsolePage";
 import { SettingsPage } from "@/components/settings/SettingsPage";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { ConnectionOverlay } from "@/components/common/ConnectionOverlay";
@@ -16,6 +17,7 @@ const pages: Record<Tab, React.ComponentType> = {
   print: PrintPage,
   actions: ActionsPage,
   macros: MacrosPage,
+  console: ConsolePage,
   settings: SettingsPage,
 };
 
@@ -49,7 +51,7 @@ export function AppShell() {
           return (
             <div
               key={tab}
-              className="absolute inset-0 overflow-y-auto"
+              className="absolute inset-0 overflow-hidden"
               style={{ display: activeTab === tab ? "block" : "none" }}
             >
               <Page />

@@ -164,3 +164,18 @@ export async function setGenericFanSpeed(name: string, speed: number): Promise<v
 export async function excludeObject(name: string): Promise<void> {
   await sendGcode(`EXCLUDE_OBJECT NAME=${name}`);
 }
+
+/** Fetch recent gcode response history */
+export interface GcodeStoreEntry {
+  message: string;
+  time: number;
+  type: "command" | "response";
+}
+
+export async function getGcodeStore(count = 100): Promise<GcodeStoreEntry[]> {
+  const result = await rpc<{ gcode_store: GcodeStoreEntry[] }>(
+    "server.gcode_store",
+    { count }
+  );
+  return result.gcode_store ?? [];
+}
