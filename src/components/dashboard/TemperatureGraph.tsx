@@ -50,13 +50,15 @@ export function TemperatureGraph() {
           label: "Hotend",
           stroke: "#3b82f6",
           width: 2,
-          fill: "rgba(59,130,246,0.1)",
+          fill: "rgba(59,130,246,0.08)",
+          paths: uPlot.paths.spline!(),
         },
         {
           label: "Bed",
           stroke: "#f97316",
           width: 2,
-          fill: "rgba(249,115,22,0.1)",
+          fill: "rgba(249,115,22,0.08)",
+          paths: uPlot.paths.spline!(),
         },
       ],
     };
