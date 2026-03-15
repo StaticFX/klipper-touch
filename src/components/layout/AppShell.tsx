@@ -25,18 +25,20 @@ export function AppShell() {
   const confirmDialog = useUiStore((s) => s.confirmDialog);
   const hideConfirm = useUiStore((s) => s.hideConfirm);
   const printState = usePrintStore((s) => s.print_stats.state);
+  const printSummary = usePrintStore((s) => s.printSummary);
   const isPrinting = printState === "printing" || printState === "paused";
+  const showingSummary = printSummary !== null;
   const wasPrinting = useRef(false);
 
   useEffect(() => {
     if (isPrinting && !wasPrinting.current) {
       setActiveTab("print");
     }
-    if (!isPrinting && wasPrinting.current) {
+    if (!isPrinting && wasPrinting.current && !showingSummary) {
       setActiveTab("dashboard");
     }
     wasPrinting.current = isPrinting;
-  }, [isPrinting, setActiveTab]);
+  }, [isPrinting, showingSummary, setActiveTab]);
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
@@ -55,7 +57,7 @@ export function AppShell() {
           );
         })}
       </div>
-      {!isPrinting && <TabBar />}
+      {!isPrinting && !showingSummary && <TabBar />}
       <ConnectionOverlay />
       {confirmDialog && (
         <ConfirmDialog
