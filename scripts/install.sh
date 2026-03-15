@@ -9,6 +9,13 @@
 #   KLIPPER_TOUCH_VERSION  — release tag to install (default: latest)
 set -euo pipefail
 
+# When running without a terminal (e.g. from the kiosk app), use non-interactive
+# sudo so it fails fast instead of hanging. The sudoers rule installed during
+# first setup grants passwordless access for update operations.
+if [ ! -t 0 ]; then
+  sudo() { command sudo -n "$@"; }
+fi
+
 # ── Configuration ────────────────────────────────────────────────────────────
 REPO="StaticFX/klipper-touch"
 GITHUB_API="https://api.github.com/repos/${REPO}"
@@ -306,6 +313,19 @@ UNIT
   success "Service installed and enabled."
 }
 
+# ── Sudoers rule for passwordless self-update ────────────────────────────────
+install_sudoers() {
+  info "Setting up passwordless sudo for updates..."
+
+  local sudoers_file="/etc/sudoers.d/klipper-touch"
+  sudo tee "${sudoers_file}" > /dev/null << SUDOERS
+# Allow klipper-touch user to self-update without a password
+${USER} ALL=(ALL) NOPASSWD: /usr/bin/apt-get, /usr/bin/dpkg, /bin/systemctl restart klipper-touch@*, /bin/systemctl stop klipper-touch@*, /bin/systemctl enable klipper-touch@*, /bin/systemctl disable klipper-touch@*, /bin/systemctl daemon-reload, /usr/bin/tee /etc/systemd/system/klipper-touch@.service, /usr/bin/tee /etc/udev/rules.d/99-klipper-touch-noblank.rules, /usr/bin/sed *
+SUDOERS
+  sudo chmod 0440 "${sudoers_file}"
+  success "Sudoers rule installed — updates will not require a password."
+}
+
 # ── Optionally disable KlipperScreen ────────────────────────────────────────
 handle_klipperscreen() {
   if ! systemctl is-active --quiet KlipperScreen 2>/dev/null; then
@@ -371,6 +391,7 @@ main() {
   install_keyboard
   create_config
   install_service
+  install_sudoers
   disable_screen_blanking
   handle_klipperscreen
   start_service
