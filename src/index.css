@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
-html, body {
+html, body, #root {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
   touch-action: pan-x pan-y;
   overscroll-behavior: none;
   -webkit-user-select: none;

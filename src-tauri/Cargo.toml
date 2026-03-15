@@ -29,3 +29,6 @@ dirs = "6"
 hostname = "0.4"
 whoami = "1"
 
+[target.'cfg(target_os = "linux")'.dependencies]
+webkit2gtk = "=2.0.1"
+

@@ -23,7 +23,7 @@ export function AppShell() {
   const hideConfirm = useUiStore((s) => s.hideConfirm);
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-screen max-h-screen w-full overflow-hidden">
       <StatusBar />
       <div className="flex-1 relative overflow-hidden">
         {(Object.keys(pages) as Tab[]).map((tab) => {

@@ -3,7 +3,6 @@ name: Build & Release
 on:
   push:
     branches: [master]
-    tags: ["v*"]
   pull_request:
     branches: [master]
 
@@ -28,9 +27,46 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
-  build:
-    if: startsWith(github.ref, 'refs/tags/v')
+  tag:
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     needs: lint
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      new_tag: ${{ steps.bump.outputs.new_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bump patch version and tag
+        id: bump
+        run: |
+          # Get latest tag, default to v0.0.0 if none exists
+          LATEST=$(git tag -l 'v*' --sort=-v:refname | head -n1)
+          if [ -z "${LATEST}" ]; then
+            LATEST="v0.0.0"
+          fi
+
+          # Parse and bump patch
+          MAJOR=$(echo "${LATEST}" | sed 's/v//' | cut -d. -f1)
+          MINOR=$(echo "${LATEST}" | sed 's/v//' | cut -d. -f2)
+          PATCH=$(echo "${LATEST}" | sed 's/v//' | cut -d. -f3)
+          NEW_PATCH=$((PATCH + 1))
+          NEW_TAG="v${MAJOR}.${MINOR}.${NEW_PATCH}"
+
+          echo "Bumping ${LATEST} → ${NEW_TAG}"
+          echo "new_tag=${NEW_TAG}" >> "$GITHUB_OUTPUT"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${NEW_TAG}" -m "Release ${NEW_TAG}"
+          git push origin "${NEW_TAG}"
+
+  build:
+    needs: tag
     runs-on: ubuntu-24.04-arm
     container:
       image: debian:bookworm
@@ -75,7 +111,8 @@ jobs:
 
       - name: Set version from git tag
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${{ needs.tag.outputs.new_tag }}"
+          VERSION="${VERSION#v}"
           sed -i "s/\"version\": \".*\"/\"version\": \"${VERSION}\"/" src-tauri/tauri.conf.json
           echo "Building version: ${VERSION}"
 
@@ -90,8 +127,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    needs: [tag, build]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -105,5 +141,6 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.tag.outputs.new_tag }}
           generate_release_notes: true
           files: dist/*.deb
