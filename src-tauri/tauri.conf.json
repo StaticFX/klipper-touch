@@ -14,9 +14,9 @@
       {
         "title": "Klipper Touch",
         "visible": false,
-        "resizable": false,
+        "resizable": true,
         "decorations": false,
-        "fullscreen": true
+        "fullscreen": false
       }
     ],
     "security": {

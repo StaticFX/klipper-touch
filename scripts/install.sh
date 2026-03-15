@@ -252,6 +252,26 @@ install_service() {
     fi
   fi
 
+  # Auto-detect display resolution from DRM
+  local screen_mode=""
+  for modefile in /sys/class/drm/*/modes; do
+    if [ -f "${modefile}" ]; then
+      local mode
+      mode="$(head -n1 "${modefile}" 2>/dev/null)"
+      if [ -n "${mode}" ]; then
+        screen_mode="${mode}"
+        break
+      fi
+    fi
+  done
+
+  local cage_args="-s"
+  if [ -n "${screen_mode}" ]; then
+    info "Detected display resolution: ${screen_mode}"
+  else
+    warn "Could not detect display resolution — Cage will use its default."
+  fi
+
   sudo tee "/etc/systemd/system/${SERVICE_NAME}@.service" > /dev/null << UNIT
 [Unit]
 Description=Klipper Touch UI
@@ -266,6 +286,7 @@ PAMName=login
 TTYPath=/dev/tty7
 Environment=XDG_RUNTIME_DIR=/run/user/%U
 Environment=WLR_DRM_NO_MODIFIERS=1
+Environment=WLR_DRM_MODE=${screen_mode:-}
 Environment=WLR_RENDERER=gles2
 Environment=WEBKIT_FORCE_SANDBOX=0
 Environment=WEBKIT_DISABLE_DMABUF_RENDERER=1
