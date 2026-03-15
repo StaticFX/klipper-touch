@@ -17,6 +17,7 @@ const SUBSCRIBED_OBJECTS: Record<string, string[] | null> = {
   fan: null,
   bed_mesh: null,
   print_stats: null,
+  exclude_object: null,
   toolhead: ["position", "homed_axes", "max_velocity", "max_accel", "square_corner_velocity"],
   gcode_move: [
     "gcode_position",

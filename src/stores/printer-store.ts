@@ -5,6 +5,7 @@ import type {
   ToolheadStatus,
   GcodeMoveStatus,
   MotionReportStatus,
+  ExcludeObjectStatus,
 } from "@/lib/moonraker/types";
 
 export interface TemperatureSample {
@@ -45,6 +46,7 @@ interface PrinterStore extends ConnectionState {
   motionReport: MotionReportStatus;
   extraTemps: Record<string, number>;
   fans: Record<string, FanInfo>;
+  excludeObject: ExcludeObjectStatus;
   bedMesh: BedMeshData | null;
   temperatureHistory: TemperatureSample[];
 
@@ -97,6 +99,7 @@ export const usePrinterStore = create<PrinterStore>((set, get) => ({
   },
   extraTemps: {},
   fans: {},
+  excludeObject: { current_object: null, excluded_objects: [], objects: [] },
   bedMesh: null,
   temperatureHistory: [],
 
@@ -129,6 +132,11 @@ export const usePrinterStore = create<PrinterStore>((set, get) => ({
     }
     if (data.motion_report) {
       updates.motionReport = { ...get().motionReport, ...(data.motion_report as Partial<MotionReportStatus>) };
+    }
+
+    // Handle exclude_object
+    if (data.exclude_object) {
+      updates.excludeObject = { ...get().excludeObject, ...(data.exclude_object as Partial<ExcludeObjectStatus>) };
     }
 
     // Handle bed mesh

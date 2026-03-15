@@ -159,3 +159,8 @@ export async function setFanSpeed(speed: number): Promise<void> {
 export async function setGenericFanSpeed(name: string, speed: number): Promise<void> {
   await sendGcode(`SET_FAN_SPEED FAN=${name} SPEED=${speed.toFixed(2)}`);
 }
+
+/** Exclude an object from the current print */
+export async function excludeObject(name: string): Promise<void> {
+  await sendGcode(`EXCLUDE_OBJECT NAME=${name}`);
+}

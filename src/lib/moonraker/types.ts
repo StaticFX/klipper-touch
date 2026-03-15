@@ -99,6 +99,12 @@ export interface GcodeThumbnail {
   relative_path: string;
 }
 
+export interface ExcludeObjectStatus {
+  current_object: string | null;
+  excluded_objects: string[];
+  objects: { name: string }[];
+}
+
 export interface MoonrakerResponse<T = unknown> {
   result: T;
 }
