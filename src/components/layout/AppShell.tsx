@@ -1,6 +1,8 @@
+import { useEffect, useRef } from "react";
 import { TabBar } from "./TabBar";
 import { StatusBar } from "./StatusBar";
 import { useUiStore, type Tab } from "@/stores/ui-store";
+import { usePrintStore } from "@/stores/print-store";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { PrintPage } from "@/components/print/PrintPage";
 import { ActionsPage } from "@/components/actions/ActionsPage";
@@ -19,8 +21,22 @@ const pages: Record<Tab, React.ComponentType> = {
 
 export function AppShell() {
   const activeTab = useUiStore((s) => s.activeTab);
+  const setActiveTab = useUiStore((s) => s.setActiveTab);
   const confirmDialog = useUiStore((s) => s.confirmDialog);
   const hideConfirm = useUiStore((s) => s.hideConfirm);
+  const printState = usePrintStore((s) => s.print_stats.state);
+  const isPrinting = printState === "printing" || printState === "paused";
+  const wasPrinting = useRef(false);
+
+  useEffect(() => {
+    if (isPrinting && !wasPrinting.current) {
+      setActiveTab("print");
+    }
+    if (!isPrinting && wasPrinting.current) {
+      setActiveTab("dashboard");
+    }
+    wasPrinting.current = isPrinting;
+  }, [isPrinting, setActiveTab]);
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
@@ -39,7 +55,7 @@ export function AppShell() {
           );
         })}
       </div>
-      <TabBar />
+      {!isPrinting && <TabBar />}
       <ConnectionOverlay />
       {confirmDialog && (
         <ConfirmDialog

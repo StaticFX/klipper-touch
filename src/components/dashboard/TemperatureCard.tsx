@@ -32,14 +32,9 @@ export function TemperatureCard({ label, current, target, power, heater }: Tempe
           <span className="text-sm text-muted-foreground">
             Target: {target > 0 ? `${target}°` : "Off"}
           </span>
-          {power > 0 && (
-            <div className="w-8 h-1.5 rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full"
-                style={{ width: `${power * 100}%` }}
-              />
-            </div>
-          )}
+          <span className={`text-xs font-medium tabular-nums ${power > 0 ? "text-primary" : "text-muted-foreground"}`}>
+            {power > 0 ? `Heating ${Math.round(power * 100)}%` : "Idle"}
+          </span>
         </div>
       </button>
       {showKeypad && (

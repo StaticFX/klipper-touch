@@ -9,8 +9,10 @@ interface PrintStore {
   print_stats: PrintStats;
   display_status: DisplayStatus;
   virtual_sdcard: VirtualSdCardStatus;
+  thumbnailUrl: string | null;
 
   updateStatus: (data: Record<string, unknown>) => void;
+  setThumbnailUrl: (url: string | null) => void;
 }
 
 export const usePrintStore = create<PrintStore>((set, get) => ({
@@ -23,12 +25,15 @@ export const usePrintStore = create<PrintStore>((set, get) => ({
     message: "",
   },
   display_status: { progress: 0, message: "" },
+  thumbnailUrl: null,
   virtual_sdcard: {
     progress: 0,
     is_active: false,
     file_position: 0,
     file_path: "",
   },
+
+  setThumbnailUrl: (url) => set({ thumbnailUrl: url }),
 
   updateStatus: (data) => {
     const updates: Partial<PrintStore> = {};

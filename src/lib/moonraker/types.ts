@@ -48,6 +48,7 @@ export interface ToolheadStatus {
   homed_axes: string;
   max_velocity: number;
   max_accel: number;
+  square_corner_velocity: number;
   print_time: number;
   estimated_print_time: number;
 }
@@ -58,6 +59,12 @@ export interface GcodeMoveStatus {
   speed: number;
   speed_factor: number;
   extrude_factor: number;
+}
+
+export interface MotionReportStatus {
+  live_extruder_velocity: number;
+  live_velocity: number;
+  live_position: [number, number, number, number];
 }
 
 export interface DisplayStatus {

@@ -4,12 +4,12 @@ import type {
   HeaterStatus,
   ToolheadStatus,
   GcodeMoveStatus,
+  MotionReportStatus,
 } from "@/lib/moonraker/types";
 
-interface TemperatureSample {
+export interface TemperatureSample {
   time: number;
-  extruder: number;
-  bed: number;
+  temps: Record<string, number>;
 }
 
 export type KlippyState = "ready" | "startup" | "shutdown" | "error" | "unknown";
@@ -42,6 +42,8 @@ interface PrinterStore extends ConnectionState {
   heater_bed: HeaterStatus;
   toolhead: ToolheadStatus;
   gcode_move: GcodeMoveStatus;
+  motionReport: MotionReportStatus;
+  extraTemps: Record<string, number>;
   fans: Record<string, FanInfo>;
   bedMesh: BedMeshData | null;
   temperatureHistory: TemperatureSample[];
@@ -59,6 +61,11 @@ function isFanKey(key: string): boolean {
   return FAN_PREFIXES.some((p) => key === p.trim() || key.startsWith(p));
 }
 
+const TEMP_SENSOR_PREFIXES = ["heater_generic ", "temperature_sensor "];
+function isTempSensorKey(key: string): boolean {
+  return TEMP_SENSOR_PREFIXES.some((p) => key.startsWith(p));
+}
+
 export const usePrinterStore = create<PrinterStore>((set, get) => ({
   moonrakerConnected: false,
   klippyState: "unknown" as KlippyState,
@@ -72,6 +79,7 @@ export const usePrinterStore = create<PrinterStore>((set, get) => ({
     homed_axes: "",
     max_velocity: 0,
     max_accel: 0,
+    square_corner_velocity: 0,
     print_time: 0,
     estimated_print_time: 0,
   },
@@ -82,6 +90,12 @@ export const usePrinterStore = create<PrinterStore>((set, get) => ({
     speed_factor: 1,
     extrude_factor: 1,
   },
+  motionReport: {
+    live_extruder_velocity: 0,
+    live_velocity: 0,
+    live_position: [0, 0, 0, 0],
+  },
+  extraTemps: {},
   fans: {},
   bedMesh: null,
   temperatureHistory: [],
@@ -113,6 +127,9 @@ export const usePrinterStore = create<PrinterStore>((set, get) => ({
     if (data.gcode_move) {
       updates.gcode_move = { ...get().gcode_move, ...(data.gcode_move as Partial<GcodeMoveStatus>) };
     }
+    if (data.motion_report) {
+      updates.motionReport = { ...get().motionReport, ...(data.motion_report as Partial<MotionReportStatus>) };
+    }
 
     // Handle bed mesh
     if (data.bed_mesh) {
@@ -125,27 +142,48 @@ export const usePrinterStore = create<PrinterStore>((set, get) => ({
       }
     }
 
-    // Handle fan objects
+    // Handle fan objects and extra temp sensors
     let fansUpdated = false;
     const currentFans = { ...get().fans };
+    let extraTempsUpdated = false;
+    const currentExtraTemps = { ...get().extraTemps };
     for (const key of Object.keys(data)) {
       if (isFanKey(key)) {
         const fanData = data[key] as Partial<FanInfo>;
         currentFans[key] = { ...currentFans[key], speed: 0, ...fanData };
         fansUpdated = true;
+        // temperature_fan also has a temperature
+        if (key.startsWith("temperature_fan ") && fanData.temperature != null) {
+          currentExtraTemps[key] = fanData.temperature;
+          extraTempsUpdated = true;
+        }
+      } else if (isTempSensorKey(key)) {
+        const sensorData = data[key] as { temperature?: number };
+        if (sensorData.temperature != null) {
+          currentExtraTemps[key] = sensorData.temperature;
+          extraTempsUpdated = true;
+        }
       }
     }
-    if (fansUpdated) {
-      updates.fans = currentFans;
-    }
+    if (fansUpdated) updates.fans = currentFans;
+    if (extraTempsUpdated) updates.extraTemps = currentExtraTemps;
 
-    // Record temperature sample
-    if (data.extruder || data.heater_bed) {
+    // Record temperature sample (any temp update triggers)
+    const hasAnyTemp = data.extruder || data.heater_bed || extraTempsUpdated;
+    if (hasAnyTemp) {
       const state = get();
       const extTemp = (data.extruder as Partial<ExtruderStatus>)?.temperature ?? state.extruder.temperature;
       const bedTemp = (data.heater_bed as Partial<HeaterStatus>)?.temperature ?? state.heater_bed.temperature;
+      const temps: Record<string, number> = {
+        extruder: extTemp,
+        bed: bedTemp,
+      };
+      const allExtra = extraTempsUpdated ? currentExtraTemps : state.extraTemps;
+      for (const [name, temp] of Object.entries(allExtra)) {
+        temps[name] = temp;
+      }
       const now = Date.now() / 1000;
-      const history = [...state.temperatureHistory, { time: now, extruder: extTemp, bed: bedTemp }];
+      const history = [...state.temperatureHistory, { time: now, temps }];
       if (history.length > MAX_HISTORY) {
         history.splice(0, history.length - MAX_HISTORY);
       }

@@ -60,9 +60,9 @@ export function ExtruderSection() {
               <Droplets size={10} className="text-muted-foreground" />
               <span className="text-[11px] text-muted-foreground">Flow {flowPct}%</span>
             </div>
-            <div className="text-[11px] text-muted-foreground">
-              Power {Math.round(extruder.power * 100)}%
-            </div>
+            <span className={`text-[11px] ${extruder.power > 0 ? "text-primary" : "text-muted-foreground"}`}>
+              {extruder.power > 0 ? `Heating ${Math.round(extruder.power * 100)}%` : "Idle"}
+            </span>
           </div>
         </div>
         <Button

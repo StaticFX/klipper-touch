@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { setFanSpeed, setGenericFanSpeed } from "@/lib/moonraker/client";
@@ -47,6 +47,8 @@ export function FanSection() {
 function FanRow({ fanKey, info }: { fanKey: string; info: FanInfo }) {
   const meta = fanMeta(fanKey);
   const pct = Math.round(info.speed * 100);
+  const [localPct, setLocalPct] = useState<number | null>(null);
+  const dragging = useRef(false);
 
   const applySpeed = useCallback(
     (percent: number) => {
@@ -84,8 +86,16 @@ function FanRow({ fanKey, info }: { fanKey: string; info: FanInfo }) {
             min={0}
             max={100}
             step={1}
-            value={[pct]}
-            onValueCommit={([v]) => applySpeed(v)}
+            value={[localPct ?? pct]}
+            onValueChange={([v]) => {
+              dragging.current = true;
+              setLocalPct(v);
+            }}
+            onValueCommit={([v]) => {
+              dragging.current = false;
+              setLocalPct(null);
+              applySpeed(v);
+            }}
             className="py-2"
           />
           <div className="flex gap-1.5">

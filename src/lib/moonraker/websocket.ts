@@ -17,7 +17,7 @@ const SUBSCRIBED_OBJECTS: Record<string, string[] | null> = {
   fan: null,
   bed_mesh: null,
   print_stats: null,
-  toolhead: ["position", "homed_axes"],
+  toolhead: ["position", "homed_axes", "max_velocity", "max_accel", "square_corner_velocity"],
   gcode_move: [
     "gcode_position",
     "homing_origin",
@@ -25,6 +25,7 @@ const SUBSCRIBED_OBJECTS: Record<string, string[] | null> = {
     "speed_factor",
     "extrude_factor",
   ],
+  motion_report: ["live_extruder_velocity", "live_velocity"],
   display_status: null,
   virtual_sdcard: null,
 };
@@ -32,6 +33,11 @@ const SUBSCRIBED_OBJECTS: Record<string, string[] | null> = {
 const FAN_PREFIXES = ["fan", "heater_fan ", "controller_fan ", "fan_generic ", "temperature_fan "];
 function isFanObject(name: string): boolean {
   return FAN_PREFIXES.some((p) => name === p.trim() || name.startsWith(p));
+}
+
+const TEMP_SENSOR_PREFIXES = ["heater_generic ", "temperature_sensor "];
+function isTempSensor(name: string): boolean {
+  return TEMP_SENSOR_PREFIXES.some((p) => name.startsWith(p));
 }
 
 // Singleton so the rest of the app can call moonraker.call()
@@ -126,13 +132,15 @@ export class MoonrakerWebSocket {
     // Discover fan objects and subscribe to everything
     try {
       const result = await this.call<{ objects: string[] }>("printer.objects.list");
-      const fanObjects: Record<string, null> = {};
+      const extraObjects: Record<string, string[] | null> = {};
       for (const obj of result.objects) {
         if (isFanObject(obj)) {
-          fanObjects[obj] = null;
+          extraObjects[obj] = null;
+        } else if (isTempSensor(obj)) {
+          extraObjects[obj] = ["temperature"];
         }
       }
-      const allObjects = { ...SUBSCRIBED_OBJECTS, ...fanObjects };
+      const allObjects = { ...SUBSCRIBED_OBJECTS, ...extraObjects };
       this.send("printer.objects.query", { objects: allObjects });
       this.send("printer.objects.subscribe", { objects: allObjects });
     } catch {

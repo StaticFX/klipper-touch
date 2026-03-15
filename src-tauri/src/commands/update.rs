@@ -1,25 +1,49 @@
-use std::process::Command;
+use std::io::{BufRead, BufReader};
+use std::process::{Command, Stdio};
+use tauri::{AppHandle, Emitter};
 
 #[tauri::command]
-pub async fn perform_update() -> Result<String, String> {
-    // Download and run the install script
-    let output = Command::new("bash")
+pub async fn perform_update(app: AppHandle) -> Result<String, String> {
+    let mut child = Command::new("bash")
         .arg("-c")
-        .arg("curl -fsSL https://raw.githubusercontent.com/StaticFX/klipper-touch/master/scripts/install.sh | bash 2>&1")
-        .output()
+        .arg("curl -fsSL https://raw.githubusercontent.com/StaticFX/klipper-touch/master/scripts/install.sh | sudo bash 2>&1")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
         .map_err(|e| format!("Failed to start update: {}", e))?;
 
-    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+    let stdout = child.stdout.take().ok_or("Failed to capture stdout")?;
+    let reader = BufReader::new(stdout);
 
-    if output.status.success() {
+    let mut full_output = String::new();
+    for line in reader.lines() {
+        match line {
+            Ok(text) => {
+                let _ = app.emit("update-output", &text);
+                full_output.push_str(&text);
+                full_output.push('\n');
+            }
+            Err(e) => {
+                let msg = format!("[read error: {}]", e);
+                let _ = app.emit("update-output", &msg);
+            }
+        }
+    }
+
+    let status = child.wait().map_err(|e| format!("Process error: {}", e))?;
+
+    if status.success() {
+        let _ = app.emit("update-done", "success");
+
         // Restart the service — this will kill the current process
         let _ = Command::new("sudo")
             .args(["systemctl", "restart", &format!("klipper-touch@{}", whoami::username())])
             .spawn();
 
-        Ok(stdout)
+        Ok(full_output)
     } else {
-        Err(format!("Update failed:\n{}\n{}", stdout, stderr))
+        let msg = format!("Update exited with code {}", status.code().unwrap_or(-1));
+        let _ = app.emit("update-done", &msg);
+        Err(format!("{}\n{}", msg, full_output))
     }
 }
