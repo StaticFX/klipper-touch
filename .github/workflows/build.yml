@@ -138,6 +138,11 @@ jobs:
           name: klipper-touch-deb
           path: dist/
 
+      - name: Delete existing release if present
+        run: gh release delete "${{ needs.tag.outputs.new_tag }}" --yes 2>/dev/null || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

@@ -132,7 +132,7 @@ install_deb() {
     error "Failed to fetch release ${KLIPPER_TOUCH_VERSION} from GitHub."
 
   local asset_url
-  asset_url="$(echo "${release_json}" | jq -r '.assets[] | select(.name | endswith(".deb")) | .browser_download_url' | head -n1)"
+  asset_url="$(echo "${release_json}" | jq -r '.assets[] | select(.name | endswith(".deb")) | .browser_download_url' | tail -n1)"
 
   if [ -z "${asset_url}" ] || [ "${asset_url}" = "null" ]; then
     error "No .deb package found in release ${KLIPPER_TOUCH_VERSION}."
