@@ -5,11 +5,12 @@ import { useKeyboardStore } from "@/stores/keyboard-store";
 
 export function VirtualKeyboard() {
   const visible = useKeyboardStore((s) => s.visible);
-  const target = useKeyboardStore((s) => s.target);
   const hide = useKeyboardStore((s) => s.hide);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const kbRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Track when user is interacting with the keyboard so focusout doesn't hide it
+  const interactingRef = useRef(false);
 
   // Native value setters for React controlled inputs
   const nativeInputSetter = useRef(
@@ -61,20 +62,22 @@ export function VirtualKeyboard() {
       }
     };
 
-    const handleFocusOut = (e: FocusEvent) => {
-      const related = e.relatedTarget as HTMLElement | null;
-      if (related && containerRef.current?.contains(related)) return;
-
+    const handleFocusOut = () => {
       setTimeout(() => {
+        // If the keyboard is being tapped, don't hide — refocus the input
+        if (interactingRef.current) return;
+
         const active = document.activeElement;
+        // If focus moved to another input, keep keyboard open (store will update target)
         if (
           active instanceof HTMLInputElement ||
           active instanceof HTMLTextAreaElement
         )
           return;
+        // If focus is inside the keyboard container, don't hide
         if (containerRef.current?.contains(active as Node)) return;
         hide();
-      }, 150);
+      }, 200);
     };
 
     document.addEventListener("focusin", handleFocusIn);
@@ -85,24 +88,33 @@ export function VirtualKeyboard() {
     };
   }, [hide]);
 
+  const refocusTarget = useCallback(() => {
+    const t = useKeyboardStore.getState().target;
+    if (t) {
+      t.focus();
+    }
+    interactingRef.current = false;
+  }, []);
+
   const onChange = useCallback(
     (input: string) => {
-      if (!target) return;
-      setNativeValue(target, input);
-      // Restore cursor to end
+      const t = useKeyboardStore.getState().target;
+      if (!t) return;
+      setNativeValue(t, input);
       const pos = input.length;
-      target.setSelectionRange(pos, pos);
-      target.focus();
+      t.setSelectionRange(pos, pos);
+      refocusTarget();
     },
-    [target, setNativeValue]
+    [setNativeValue, refocusTarget]
   );
 
   const onKeyPress = useCallback(
     (button: string) => {
-      if (!target) return;
+      const t = useKeyboardStore.getState().target;
+      if (!t) return;
 
       if (button === "{enter}") {
-        target.dispatchEvent(
+        t.dispatchEvent(
           new KeyboardEvent("keydown", { key: "Enter", bubbles: true })
         );
         hide();
@@ -111,13 +123,13 @@ export function VirtualKeyboard() {
 
       if (button === "{numbers}") {
         kbRef.current?.setOptions({ layoutName: "numbers" });
-        target.focus();
+        refocusTarget();
         return;
       }
 
       if (button === "{abc}") {
         kbRef.current?.setOptions({ layoutName: "default" });
-        target.focus();
+        refocusTarget();
         return;
       }
 
@@ -126,20 +138,14 @@ export function VirtualKeyboard() {
         kbRef.current?.setOptions({
           layoutName: current === "shift" ? "default" : "shift",
         });
-        target.focus();
+        refocusTarget();
         return;
       }
 
-      // Keep focus on the input
-      target.focus();
+      // Regular keys — refocus handled by onChange
     },
-    [target, hide]
+    [hide, refocusTarget]
   );
-
-  // Prevent touches on keyboard from stealing focus from the input
-  const preventFocusLoss = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-  };
 
   if (!visible) return null;
 
@@ -147,13 +153,15 @@ export function VirtualKeyboard() {
     <div
       ref={containerRef}
       className="keyboard-wrapper shrink-0 border-t border-border"
-      onMouseDown={preventFocusLoss}
-      onTouchStart={preventFocusLoss}
+      onPointerDown={() => {
+        interactingRef.current = true;
+      }}
     >
       <Keyboard
         keyboardRef={(r) => (kbRef.current = r)}
         onChange={onChange}
         onKeyPress={onKeyPress}
+        preventMouseDownDefault
         mergeDisplay
         display={{
           "{bksp}": "⌫ Delete",
