@@ -12,6 +12,7 @@ import { SettingsPage } from "@/components/settings/SettingsPage";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { ConnectionOverlay } from "@/components/common/ConnectionOverlay";
 import { VirtualKeyboard } from "@/components/common/VirtualKeyboard";
+import { ToastContainer } from "@/components/common/ToastContainer";
 
 const pages: Record<Tab, React.ComponentType> = {
   dashboard: Dashboard,
@@ -77,6 +78,7 @@ export function AppShell() {
           );
         })}
         <VirtualKeyboard />
+        <ToastContainer />
       </div>
       {showTabBar && <TabBar />}
       <ConnectionOverlay />

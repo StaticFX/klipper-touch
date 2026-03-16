@@ -14,6 +14,26 @@ export default defineConfig(async () => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/uplot")) {
+            return "uplot";
+          }
+          if (id.includes("node_modules/lucide-react")) {
+            return "icons";
+          }
+          if (id.includes("node_modules/@tauri-apps")) {
+            return "tauri";
+          }
+          if (id.includes("node_modules/")) {
+            return "vendor";
+          }
+        },
+      },
+    },
+  },
   clearScreen: false,
   server: {
     port: 1420,

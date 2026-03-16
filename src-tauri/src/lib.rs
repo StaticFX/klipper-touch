@@ -20,7 +20,7 @@ pub fn run() {
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
-            window.with_webview(|_webview| {
+            window.with_webview(|webview| {
                 #[cfg(target_os = "linux")]
                 {
                     use webkit2gtk::WebViewExt;
@@ -31,6 +31,7 @@ pub fn run() {
                     }
                     webview.inner().set_zoom_level(1.0);
                 }
+                let _ = &webview; // suppress unused warning on non-Linux
             })?;
             Ok(())
         })

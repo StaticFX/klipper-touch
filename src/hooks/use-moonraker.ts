@@ -5,6 +5,7 @@ import { usePrinterStore } from "@/stores/printer-store";
 import { usePrintStore } from "@/stores/print-store";
 import { useConsoleStore } from "@/stores/console-store";
 import { useUiStore } from "@/stores/ui-store";
+import { useToastStore } from "@/stores/toast-store";
 import { getConfig } from "@/lib/config";
 
 export function useMoonraker() {
@@ -50,6 +51,11 @@ export function useMoonraker() {
           time: Date.now() / 1000,
           type: "response",
         });
+
+        // Klipper prefixes errors with "!!"
+        if (message.startsWith("!!")) {
+          useToastStore.getState().addToast(message.replace(/^!!\s*/, ""), "error");
+        }
       });
 
       wsRef.current = ws;

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useUiStore } from "@/stores/ui-store";
 import { usePrinterStore } from "@/stores/printer-store";
 import { usePrintStore, type PrintSummary } from "@/stores/print-store";
+import { useToastStore } from "@/stores/toast-store";
 import { useSubmenu } from "@/hooks/use-submenu";
 import { checkForUpdate, REPO_URL, type UpdateInfo } from "@/lib/update-checker";
 import {
@@ -566,6 +567,24 @@ function DebugSub() {
           Shows the print summary screen with mock data. Switch to the Print tab to see it.
         </p>
       </div>
+
+      <div className="border-t border-border pt-4 space-y-2">
+        <div className="text-sm font-medium">Mock Toasts</div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="flex-1 text-destructive"
+            onClick={() => useToastStore.getState().addToast("Move out of range: 350.0 is beyond max X", "error")}>
+            Error
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1 text-orange-500"
+            onClick={() => useToastStore.getState().addToast("Heater not reaching target temperature", "warning")}>
+            Warning
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1 text-primary"
+            onClick={() => useToastStore.getState().addToast("Bed mesh calibration complete", "info")}>
+            Info
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -586,7 +605,9 @@ const submenus: SubMenu[] = [
   { id: "connection", title: "Connection", icon: PlugZap, component: ConnectionSub },
   { id: "network", title: "Network", icon: Wifi, component: NetworkSub },
   { id: "about", title: "About", icon: Info, component: AboutSub },
-  { id: "debug", title: "Debug", icon: Bug, component: DebugSub },
+  ...(import.meta.env.DEV
+    ? [{ id: "debug", title: "Debug", icon: Bug, component: DebugSub } as const]
+    : []),
 ];
 
 export function SettingsPage() {
