@@ -19,7 +19,7 @@ pub fn run() {
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
-            window.with_webview(|webview| {
+            window.with_webview(|_webview| {
                 #[cfg(target_os = "linux")]
                 {
                     use webkit2gtk::WebViewExt;
