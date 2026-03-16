@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type Tab = "dashboard" | "print" | "actions" | "macros" | "console" | "settings";
+export type Tab = "dashboard" | "print" | "actions" | "macros" | "settings";
 export type Theme = "light" | "dark";
 
 interface UiStore {

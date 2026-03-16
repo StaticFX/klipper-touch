@@ -11,9 +11,11 @@ import {
   ChevronLeft, ChevronRight, Sun, Moon, Wifi, RefreshCw, Info,
   PlugZap, ExternalLink, ArrowUpCircle, Loader2, Download, Bug,
   Monitor, Thermometer, Eye, EyeOff, Lock, Signal, Trash2, Check, X,
+  Terminal,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { UpdateModal } from "./UpdateModal";
+import { ConsolePage } from "@/components/console/ConsolePage";
 
 interface NetworkInfo {
   hostname: string;
@@ -533,9 +535,11 @@ interface SubMenu {
   title: string;
   icon: LucideIcon;
   component: React.ComponentType;
+  fullPage?: boolean;
 }
 
 const submenus: SubMenu[] = [
+  { id: "console", title: "Terminal", icon: Terminal, component: ConsolePage, fullPage: true },
   { id: "klipper-touch", title: "Klipper Touch", icon: Monitor, component: KlipperTouchSub },
   { id: "connection", title: "Connection", icon: PlugZap, component: ConnectionSub },
   { id: "network", title: "Network", icon: Wifi, component: NetworkSub },
@@ -566,9 +570,15 @@ export function SettingsPage() {
           <ChevronLeft size={16} />
           {current.title}
         </button>
-        <div className="flex-1 overflow-y-auto p-3">
-          <Component />
-        </div>
+        {current.fullPage ? (
+          <div className="flex-1 min-h-0">
+            <Component />
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto p-3">
+            <Component />
+          </div>
+        )}
       </div>
     );
   }

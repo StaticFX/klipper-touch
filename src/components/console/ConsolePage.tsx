@@ -35,7 +35,12 @@ export function ConsolePage() {
   // Auto-scroll to bottom when new lines arrive
   useEffect(() => {
     if (autoScroll && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      // Use rAF to ensure DOM has rendered new lines before scrolling
+      requestAnimationFrame(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+      });
     }
   }, [lines, autoScroll]);
 
