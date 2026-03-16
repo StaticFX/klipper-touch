@@ -3,7 +3,6 @@ import { getGcodeHelp, getMacroParams, sendGcode } from "@/lib/moonraker/client"
 import { usePrinterStore } from "@/stores/printer-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Search, Play, RefreshCw, ChevronLeft } from "lucide-react";
 
 interface MacroInfo {
@@ -82,7 +81,6 @@ export function MacrosPage() {
 
   const openMacro = (macro: MacroInfo) => {
     setSelected(macro);
-    // Pre-fill with defaults
     const defaults: Record<string, string> = {};
     for (const [key, val] of Object.entries(macro.params)) {
       defaults[key] = val;
@@ -91,22 +89,25 @@ export function MacrosPage() {
   };
 
   if (loading) {
-    return <div className="p-3 text-center text-muted-foreground py-8">Loading macros...</div>;
+    return <div className="text-center text-muted-foreground py-8">Loading macros...</div>;
   }
 
   // Detail view for a selected macro
   if (selected) {
     const hasParams = Object.keys(selected.params).length > 0;
     return (
-      <div>
-        <button
-          onClick={() => { setSelected(null); setParamValues({}); }}
-          className="sticky top-0 z-10 flex items-center gap-2 px-3 py-3 text-sm font-medium text-muted-foreground active:bg-accent/50 border-b border-border bg-background w-full"
-        >
-          <ChevronLeft size={16} />
-          Macros
-        </button>
-        <div className="p-3 space-y-4">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => { setSelected(null); setParamValues({}); }}
+            className="flex items-center gap-1 text-xs text-primary active:scale-95"
+          >
+            <ChevronLeft size={12} />
+            Back
+          </button>
+        </div>
+
+        <div className="p-3 bg-card border border-border rounded-lg space-y-4">
           <div>
             <div className="text-base font-semibold font-mono">{selected.name}</div>
             {selected.description && (
@@ -143,11 +144,10 @@ export function MacrosPage() {
     );
   }
 
-  // List view — uses parent scroll (no nested scroll container)
+  // List view — flat layout, same pattern as FileBrowser
   return (
-    <div className="p-3 space-y-3">
-      {/* Search bar — sticky */}
-      <div className="sticky top-0 z-10 bg-background pt-0 pb-1 flex gap-2">
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
         <div className="relative flex-1">
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -157,52 +157,50 @@ export function MacrosPage() {
             className="pl-8 h-9"
           />
         </div>
-        <Button variant="outline" size="icon" onClick={fetchMacros}>
-          <RefreshCw size={14} />
-        </Button>
+        <button
+          onClick={fetchMacros}
+          className="flex items-center gap-1 text-xs text-primary active:scale-95 ml-2"
+        >
+          <RefreshCw size={12} />
+          Refresh
+        </button>
       </div>
 
-      {/* Macro count */}
-      <div>
-        <span className="text-xs text-muted-foreground">
-          {filtered.length} macro{filtered.length !== 1 ? "s" : ""}
-        </span>
+      <div className="text-xs text-muted-foreground px-1">
+        {filtered.length} macro{filtered.length !== 1 ? "s" : ""}
       </div>
 
-      {/* Macro list */}
-      <div className="space-y-1.5">
-        {filtered.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8 text-sm">
-            {filter ? "No macros match your search" : "No macros found on printer"}
-          </div>
-        ) : (
-          filtered.map((macro) => (
-            <Card key={macro.name} className="py-0 gap-0">
-              <CardContent className="px-3 py-2.5">
-                <button
-                  className="w-full flex items-center gap-3 text-left"
-                  onClick={() => openMacro(macro)}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium font-mono truncate">{macro.name}</div>
-                    {macro.description && (
-                      <div className="text-xs text-muted-foreground truncate mt-0.5">
-                        {macro.description}
-                      </div>
-                    )}
-                    {Object.keys(macro.params).length > 0 && (
-                      <div className="text-[10px] text-muted-foreground/70 mt-0.5">
-                        Params: {Object.keys(macro.params).join(", ")}
-                      </div>
-                    )}
-                  </div>
-                  <Play size={14} className="text-muted-foreground shrink-0" />
-                </button>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+      {filtered.length === 0 ? (
+        <div className="text-center text-muted-foreground py-8 text-sm">
+          {filter ? "No macros match your search" : "No macros found on printer"}
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {filtered.map((macro) => (
+            <div key={macro.name} className="flex items-center gap-2 p-3 bg-card border border-border rounded-lg">
+              <button
+                className="flex-1 flex items-center gap-3 text-left active:scale-[0.98] transition-transform min-w-0"
+                onClick={() => openMacro(macro)}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium font-mono truncate">{macro.name}</div>
+                  {macro.description && (
+                    <div className="text-xs text-muted-foreground truncate mt-0.5">
+                      {macro.description}
+                    </div>
+                  )}
+                  {Object.keys(macro.params).length > 0 && (
+                    <div className="text-[10px] text-muted-foreground/70 mt-0.5">
+                      Params: {Object.keys(macro.params).join(", ")}
+                    </div>
+                  )}
+                </div>
+                <Play size={14} className="text-muted-foreground shrink-0" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
