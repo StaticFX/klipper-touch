@@ -24,17 +24,17 @@ export function TemperatureCard({ label, current, target, power, heater }: Tempe
       <Button
         variant="ghost"
         onClick={() => setShowKeypad(true)}
-        className="h-auto p-3.5 flex-col items-start gap-0 text-left bg-card border border-border rounded-xl"
+        className="h-auto p-3 flex-col items-start gap-0 text-left bg-card border border-border rounded-xl overflow-hidden"
       >
-        <div className="text-xs text-muted-foreground mb-1">{label}</div>
-        <div className="text-[28px] font-bold leading-none tabular-nums">
+        <div className="text-[10px] landscape:text-xs text-muted-foreground mb-1">{label}</div>
+        <div className="text-2xl landscape:text-[28px] font-bold leading-none tabular-nums">
           {current.toFixed(1)}°
         </div>
-        <div className="flex items-center justify-between mt-2 w-full">
-          <span className="text-sm text-muted-foreground">
+        <div className="flex flex-col landscape:flex-row landscape:items-center landscape:justify-between mt-1.5 landscape:mt-2 w-full gap-0.5">
+          <span className="text-xs landscape:text-sm text-muted-foreground truncate">
             Target: {target > 0 ? `${target}°` : "Off"}
           </span>
-          <span className={`text-xs font-medium tabular-nums ${power > 0 ? "text-primary" : "text-muted-foreground"}`}>
+          <span className={`text-[10px] landscape:text-xs font-medium tabular-nums ${power > 0 ? "text-primary" : "text-muted-foreground"}`}>
             {power > 0 ? `Heating ${Math.round(power * 100)}%` : "Idle"}
           </span>
         </div>

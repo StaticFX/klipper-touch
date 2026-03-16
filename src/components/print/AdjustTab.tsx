@@ -43,12 +43,12 @@ export function AdjustTab() {
       {/* Z baby-stepping */}
       <Card>
         <div className="text-[10px] text-muted-foreground uppercase tracking-wider text-center mb-1.5">Z Offset</div>
-        <div className="flex items-center gap-2">
+        <div className="text-center mb-2">
+          <div className="text-lg font-bold tabular-nums">{zOffset >= 0 ? "+" : ""}{zOffset.toFixed(3)} mm</div>
+        </div>
+        <div className="grid grid-cols-4 gap-1.5">
           <StepBtn label="-0.05" onTap={() => babyStep(-0.05)} />
           <StepBtn label="-0.01" onTap={() => babyStep(-0.01)} />
-          <div className="flex-1 text-center">
-            <div className="text-lg font-bold tabular-nums">{zOffset >= 0 ? "+" : ""}{zOffset.toFixed(3)} mm</div>
-          </div>
           <StepBtn label="+0.01" onTap={() => babyStep(0.01)} />
           <StepBtn label="+0.05" onTap={() => babyStep(0.05)} />
         </div>
@@ -79,10 +79,10 @@ export function AdjustTab() {
           onValueChange={([v]) => setLocalFanPct(v)}
           onValueCommit={([v]) => { setLocalFanPct(null); setFanSpeed(v / 100); }}
           className="py-1" />
-        <div className="flex gap-1.5 mt-2">
+        <div className="grid grid-cols-3 landscape:flex gap-1.5 mt-2">
           {[0, 25, 50, 75, 100].map((p) => (
             <Button key={p} variant={fanPct === p ? "default" : "secondary"} size="xs"
-              className="flex-1" onClick={() => { setLocalFanPct(null); setFanSpeed(p / 100); }}>
+              className="landscape:flex-1" onClick={() => { setLocalFanPct(null); setFanSpeed(p / 100); }}>
               {p === 0 ? "Off" : `${p}%`}
             </Button>
           ))}
@@ -171,12 +171,12 @@ function PctAdjust({ label, value, onStep }: {
   return (
     <Card>
       <div className="text-[10px] text-muted-foreground uppercase tracking-wider text-center mb-1.5">{label}</div>
-      <div className="flex items-center gap-2">
+      <div className="text-center mb-2">
+        <div className="text-lg font-bold tabular-nums">{value}%</div>
+      </div>
+      <div className="grid grid-cols-4 gap-1.5">
         <PctBtn label="-10" onTap={() => onStep(-10)} />
         <PctBtn label="-5" onTap={() => onStep(-5)} />
-        <div className="flex-1 text-center">
-          <div className="text-lg font-bold tabular-nums">{value}%</div>
-        </div>
         <PctBtn label="+5" onTap={() => onStep(5)} />
         <PctBtn label="+10" onTap={() => onStep(10)} />
       </div>
@@ -186,7 +186,7 @@ function PctAdjust({ label, value, onStep }: {
 
 function PctBtn({ label, onTap }: { label: string; onTap: () => void }) {
   return (
-    <Button variant="secondary" size="sm" className="min-w-[48px] tabular-nums" onClick={onTap}>
+    <Button variant="secondary" size="sm" className="tabular-nums" onClick={onTap}>
       {label.startsWith("-") ? <Minus size={12} /> : <Plus size={12} />}
       {label.replace(/^[+-]/, "")}
     </Button>

@@ -196,13 +196,13 @@ export function TemperatureSection({ mode }: { mode: SectionMode }) {
             {extruder.temperature.toFixed(0)}° / {extruder.target > 0 ? `${extruder.target}°` : "Off"}
           </span>
         </div>
-        <div className="flex gap-1.5">
+        <div className="grid grid-cols-3 landscape:flex gap-1.5">
           {hotendPresets.map((t) => (
             <Button
               key={t}
               variant={extruder.target === t ? "default" : "outline"}
               size="sm"
-              className="flex-1"
+              className="landscape:flex-1"
               onClick={() => setTemperature("extruder", t)}
             >
               {t === 0 ? "Off" : `${t}°`}
@@ -229,13 +229,13 @@ export function TemperatureSection({ mode }: { mode: SectionMode }) {
             {bed.temperature.toFixed(0)}° / {bed.target > 0 ? `${bed.target}°` : "Off"}
           </span>
         </div>
-        <div className="flex gap-1.5">
+        <div className="grid grid-cols-3 landscape:flex gap-1.5">
           {bedPresets.map((t) => (
             <Button
               key={t}
               variant={bed.target === t ? "default" : "outline"}
               size="sm"
-              className="flex-1"
+              className="landscape:flex-1"
               onClick={() => setTemperature("heater_bed", t)}
             >
               {t === 0 ? "Off" : `${t}°`}

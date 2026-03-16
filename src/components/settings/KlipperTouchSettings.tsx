@@ -54,13 +54,13 @@ export function KlipperTouchSettings() {
       {/* Accent color */}
       <div>
         <div className="text-xs text-muted-foreground mb-2 font-medium">Accent Color</div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5 landscape:gap-2">
           {ACCENT_PRESETS.map((preset) => {
             const isActive = accentHue === preset.hue;
             return (
               <button
                 key={preset.hue}
-                className={`w-9 h-9 rounded-full border-2 transition-all active:scale-95 flex items-center justify-center ${
+                className={`w-8 h-8 landscape:w-9 landscape:h-9 rounded-full border-2 transition-all active:scale-95 flex items-center justify-center ${
                   isActive ? "border-foreground scale-110" : "border-transparent"
                 }`}
                 style={{ backgroundColor: `oklch(0.6 0.2 ${preset.hue})` }}

@@ -120,12 +120,12 @@ export function ExtruderSection({ mode }: { mode: SectionMode }) {
       {/* Feed length */}
       <div>
         <div className="text-[11px] text-muted-foreground mb-1">Feed Amount (mm)</div>
-        <div className="flex gap-1.5">
+        <div className="grid grid-cols-3 landscape:flex gap-1.5">
           {FEED_LENGTHS.map((l) => (
             <Button
               key={l}
               variant={feedLength === l ? "default" : "outline"}
-              className="flex-1 h-10 text-xs"
+              className="landscape:flex-1 h-10 text-xs"
               onClick={() => setFeedLength(l)}
             >
               {l}
@@ -137,12 +137,12 @@ export function ExtruderSection({ mode }: { mode: SectionMode }) {
       {/* Feed speed */}
       <div>
         <div className="text-[11px] text-muted-foreground mb-1">Feed Speed (mm/s)</div>
-        <div className="flex gap-1.5">
+        <div className="grid grid-cols-2 landscape:flex gap-1.5">
           {FEED_SPEEDS.map((s) => (
             <Button
               key={s}
               variant={feedSpeed === s ? "default" : "outline"}
-              className="flex-1 h-10 text-xs"
+              className="landscape:flex-1 h-10 text-xs"
               onClick={() => setFeedSpeed(s)}
             >
               {s}

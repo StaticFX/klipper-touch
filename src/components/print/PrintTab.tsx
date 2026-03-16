@@ -35,10 +35,10 @@ export function PrintTab({ filename, thumbnailUrl }: { filename: string; thumbna
 
   return (
     <div className="flex flex-col h-full p-4 gap-3">
-      {/* Top: thumbnail + stats side by side */}
-      <div className="flex-1 min-h-0 flex gap-4">
+      {/* Portrait: stack vertically. Landscape: side by side */}
+      <div className="flex-1 min-h-0 flex flex-col landscape:flex-row gap-4">
         {/* Thumbnail */}
-        <div className="shrink-0 aspect-square h-full max-h-[200px] rounded-2xl bg-muted border border-border overflow-hidden flex items-center justify-center self-center">
+        <div className="shrink-0 self-center w-32 h-32 landscape:aspect-square landscape:w-auto landscape:h-full landscape:max-h-[200px] rounded-2xl bg-muted border border-border overflow-hidden flex items-center justify-center">
           {thumbnailUrl ? (
             <img src={thumbnailUrl} alt="" className="w-full h-full object-contain"
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />

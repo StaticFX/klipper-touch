@@ -23,7 +23,7 @@ export function Dashboard() {
           heater="heater_bed"
         />
       </div>
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-[120px]">
         <TemperatureGraph />
       </div>
     </div>

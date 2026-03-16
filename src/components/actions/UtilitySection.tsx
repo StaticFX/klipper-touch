@@ -167,7 +167,7 @@ export function UtilitySection({ mode }: { mode: SectionMode }) {
   }
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-2 landscape:grid-cols-3 gap-2">
       {shortcuts.map((s, i) => (
         <Button
           key={i}

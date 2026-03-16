@@ -24,33 +24,33 @@ export function PrintSummaryScreen({ summary }: { summary: PrintSummary }) {
   const filamentMeters = (summary.filament_used / 1000).toFixed(2);
 
   return (
-    <div className="flex items-center justify-center h-full p-6">
-      <div className="flex flex-col gap-4 max-w-2xl w-full">
-        {/* Status badge — spans full width */}
-        <div className="flex items-center gap-2.5 justify-center">
-          <div className={`p-2 rounded-full ${cfg.bg} ${cfg.border} border`}>
-            <Icon size={24} className={cfg.color} />
+    <div className="flex items-center justify-center h-full p-3">
+      <div className="flex flex-col gap-3 w-full max-w-lg">
+        {/* Status badge */}
+        <div className="flex items-center gap-2 justify-center">
+          <div className={`p-1.5 rounded-full ${cfg.bg} ${cfg.border} border`}>
+            <Icon size={20} className={cfg.color} />
           </div>
-          <div className={`text-lg font-semibold ${cfg.color}`}>{cfg.label}</div>
+          <div className={`text-base font-semibold ${cfg.color}`}>{cfg.label}</div>
         </div>
 
-        {/* Two columns: thumbnail | stats + done */}
-        <div className="flex gap-4">
-          {/* Left: thumbnail + filename, height matches right column */}
-          <div className="flex flex-col shrink-0">
-            <div className="flex-1 aspect-square rounded-2xl bg-muted border border-border overflow-hidden flex items-center justify-center">
+        {/* Portrait: stack vertically. Landscape: side by side */}
+        <div className="flex flex-col landscape:flex-row gap-3">
+          {/* Thumbnail + filename */}
+          <div className="flex landscape:flex-col items-center gap-3 landscape:shrink-0">
+            <div className="w-24 h-24 landscape:w-32 landscape:h-32 rounded-xl bg-muted border border-border overflow-hidden flex items-center justify-center shrink-0">
               {summary.thumbnailUrl ? (
                 <img src={summary.thumbnailUrl} alt="" className="w-full h-full object-contain" />
               ) : (
-                <Icon size={48} className="text-muted-foreground/30" />
+                <Icon size={32} className="text-muted-foreground/30" />
               )}
             </div>
-            <div className="text-sm font-medium text-center truncate mt-2">
+            <div className="text-sm font-medium truncate landscape:text-center min-w-0 flex-1 landscape:flex-none">
               {summary.filename.split("/").pop() ?? summary.filename}
             </div>
           </div>
 
-          {/* Right: stats grid + done button */}
+          {/* Stats grid + done button */}
           <div className="flex-1 flex flex-col gap-3 min-w-0">
             <div className="grid grid-cols-2 gap-2 flex-1">
               <StatCard icon={Timer} label="Print Time" value={fmtDur(summary.print_duration)} />
@@ -58,7 +58,7 @@ export function PrintSummaryScreen({ summary }: { summary: PrintSummary }) {
               <StatCard icon={Ruler} label="Filament" value={`${filamentMeters} m`} />
               <StatCard icon={Layers} label="Layers" value={summary.layers} />
             </div>
-            <Button className="w-full h-12 font-semibold text-sm shrink-0" onClick={dismiss}>
+            <Button className="w-full h-11 font-semibold text-sm shrink-0" onClick={dismiss}>
               Done
             </Button>
           </div>
@@ -70,10 +70,10 @@ export function PrintSummaryScreen({ summary }: { summary: PrintSummary }) {
 
 function StatCard({ icon: Icon, label, value }: { icon: React.ComponentType<{ size?: number; className?: string }>; label: string; value: string }) {
   return (
-    <div className="bg-card border border-border rounded-xl px-3 py-2.5 flex flex-col justify-center space-y-0.5">
+    <div className="bg-card border border-border rounded-xl px-3 py-2 flex flex-col justify-center space-y-0.5">
       <div className="flex items-center gap-1.5 text-muted-foreground">
-        <Icon size={12} />
-        <span className="text-[10px] uppercase tracking-wider">{label}</span>
+        <Icon size={11} />
+        <span className="text-[9px] uppercase tracking-wider">{label}</span>
       </div>
       <div className="text-sm font-semibold tabular-nums">{value}</div>
     </div>

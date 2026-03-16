@@ -133,16 +133,16 @@ export function MovementSection({ mode }: { mode: SectionMode }) {
     send(`G91\nG1 Z${dir * stepSize} F${f}\nG90`);
   };
 
-  const jogBtn = "h-16 w-16 rounded-xl text-base";
+  const jogBtn = "h-14 w-14 landscape:h-16 landscape:w-16 rounded-xl text-base";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 landscape:space-y-4">
       {/* Position readout */}
       <div className="grid grid-cols-3 gap-2">
         {(["X", "Y", "Z"] as const).map((axis, i) => {
           const homed = homedAxes.includes(axis.toLowerCase());
           return (
-            <div key={axis} className="rounded-lg border border-border px-3 py-2 bg-card">
+            <div key={axis} className="rounded-lg border border-border px-3 py-1.5 landscape:py-2 bg-card">
               <div className="text-[10px] text-muted-foreground">{axis}</div>
               <div className={`text-sm font-semibold tabular-nums ${homed ? "" : "text-muted-foreground"}`}>
                 {homed ? pos[i].toFixed(2) : "?"}
@@ -152,58 +152,66 @@ export function MovementSection({ mode }: { mode: SectionMode }) {
         })}
       </div>
 
-      {/* Two-column layout: jog left, actions right */}
-      <div className="flex gap-4">
-        {/* Left: XY cross + Z */}
-        <div className="flex gap-3 shrink-0">
+      {/* Step size — above jog pad in portrait, beside in landscape */}
+      <div className="landscape:hidden">
+        <div className="text-[11px] text-muted-foreground mb-1">Step (mm)</div>
+        <div className="grid grid-cols-4 gap-1">
+          {STEP_SIZES.map((s) => (
+            <Button key={s} variant={stepSize === s ? "default" : "outline"} className="h-10 text-xs px-0" onClick={() => setStepSize(s)}>
+              {s}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Landscape: side-by-side. Portrait: jog pad centered, actions below */}
+      <div className="flex flex-col landscape:flex-row gap-3 landscape:gap-4">
+        {/* Jog pad: XY cross + Z */}
+        <div className="flex gap-3 justify-center landscape:justify-start shrink-0">
           <div className="grid grid-cols-3 gap-1.5">
             <div />
             <Button variant="outline" className={jogBtn} onClick={() => moveXY("Y", yDir)}>
-              <ArrowUp size={22} />
+              <ArrowUp size={20} />
             </Button>
             <div />
             <Button variant="outline" className={jogBtn} onClick={() => moveXY("X", -xDir)}>
-              <ArrowLeft size={22} />
+              <ArrowLeft size={20} />
             </Button>
             <div className="flex items-center justify-center text-xs text-muted-foreground font-medium">
               XY
             </div>
             <Button variant="outline" className={jogBtn} onClick={() => moveXY("X", xDir)}>
-              <ArrowRight size={22} />
+              <ArrowRight size={20} />
             </Button>
             <div />
             <Button variant="outline" className={jogBtn} onClick={() => moveXY("Y", -yDir)}>
-              <ArrowDown size={22} />
+              <ArrowDown size={20} />
             </Button>
             <div />
           </div>
 
-          <div className="flex flex-col items-center gap-1.5 w-16">
-            <Button variant="outline" className="h-16 w-full rounded-xl" onClick={() => moveZ(zDir)}>
-              <ChevronUp size={22} />
+          <div className="flex flex-col items-center gap-1.5 w-14 landscape:w-16">
+            <Button variant="outline" className="h-14 landscape:h-16 w-full rounded-xl" onClick={() => moveZ(zDir)}>
+              <ChevronUp size={20} />
             </Button>
-            <div className="text-center py-1">
+            <div className="text-center py-0.5 landscape:py-1">
               <div className="text-[10px] text-muted-foreground">Z</div>
               <div className="text-xs font-semibold tabular-nums">{pos[2].toFixed(2)}</div>
             </div>
-            <Button variant="outline" className="h-16 w-full rounded-xl" onClick={() => moveZ(-zDir)}>
-              <ChevronDown size={22} />
+            <Button variant="outline" className="h-14 landscape:h-16 w-full rounded-xl" onClick={() => moveZ(-zDir)}>
+              <ChevronDown size={20} />
             </Button>
           </div>
         </div>
 
-        {/* Right: step size + homing + actions */}
+        {/* Actions panel */}
         <div className="flex-1 space-y-3 min-w-0">
-          <div>
+          {/* Step size — landscape only (shown above in portrait) */}
+          <div className="hidden landscape:block">
             <div className="text-[11px] text-muted-foreground mb-1">Step (mm)</div>
             <div className="grid grid-cols-4 gap-1">
               {STEP_SIZES.map((s) => (
-                <Button
-                  key={s}
-                  variant={stepSize === s ? "default" : "outline"}
-                  className="h-10 text-xs px-0"
-                  onClick={() => setStepSize(s)}
-                >
+                <Button key={s} variant={stepSize === s ? "default" : "outline"} className="h-10 text-xs px-0" onClick={() => setStepSize(s)}>
                   {s}
                 </Button>
               ))}
@@ -213,39 +221,13 @@ export function MovementSection({ mode }: { mode: SectionMode }) {
           <div>
             <div className="text-[11px] text-muted-foreground mb-1">Homing</div>
             <div className="grid grid-cols-4 gap-1">
-              <Button
-                variant={allHomed ? "secondary" : "default"}
-                className="h-10 text-xs"
-                disabled={busy}
-                onClick={() => send("G28")}
-              >
+              <Button variant={allHomed ? "secondary" : "default"} className="h-10 text-xs" disabled={busy} onClick={() => send("G28")}>
                 {busy ? <Loader2 size={14} className="animate-spin" /> : <Home size={14} />}
                 All
               </Button>
-              <Button
-                variant={xHomed ? "secondary" : "outline"}
-                className="h-10 text-xs"
-                disabled={busy}
-                onClick={() => send("G28 X")}
-              >
-                X
-              </Button>
-              <Button
-                variant={yHomed ? "secondary" : "outline"}
-                className="h-10 text-xs"
-                disabled={busy}
-                onClick={() => send("G28 Y")}
-              >
-                Y
-              </Button>
-              <Button
-                variant={zHomed ? "secondary" : "outline"}
-                className="h-10 text-xs"
-                disabled={busy}
-                onClick={() => send("G28 Z")}
-              >
-                Z
-              </Button>
+              <Button variant={xHomed ? "secondary" : "outline"} className="h-10 text-xs" disabled={busy} onClick={() => send("G28 X")}>X</Button>
+              <Button variant={yHomed ? "secondary" : "outline"} className="h-10 text-xs" disabled={busy} onClick={() => send("G28 Y")}>Y</Button>
+              <Button variant={zHomed ? "secondary" : "outline"} className="h-10 text-xs" disabled={busy} onClick={() => send("G28 Z")}>Z</Button>
             </div>
           </div>
 
@@ -261,11 +243,7 @@ export function MovementSection({ mode }: { mode: SectionMode }) {
             </div>
           </div>
 
-          <Button
-            variant="outline"
-            className="w-full h-10 text-xs text-destructive"
-            onClick={() => send("M84")}
-          >
+          <Button variant="outline" className="w-full h-10 text-xs text-destructive" onClick={() => send("M84")}>
             <Power size={14} />
             Disable Motors
           </Button>

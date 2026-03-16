@@ -412,12 +412,12 @@ export function BedMeshSection({ mode: _mode }: { mode: "controls" | "settings" 
       {/* Z Scale selector */}
       <div>
         <div className="text-[11px] text-muted-foreground mb-1">Z Exaggeration</div>
-        <div className="flex gap-1.5">
+        <div className="grid grid-cols-3 landscape:flex gap-1.5">
           {SCALE_PRESETS.map((s) => (
             <Button
               key={s}
               variant={zExaggeration === s ? "default" : "outline"}
-              className="flex-1 h-9 text-xs"
+              className="landscape:flex-1 h-9 text-xs"
               onClick={() => setZExaggeration(s)}
             >
               {s}x
@@ -442,7 +442,7 @@ export function BedMeshSection({ mode: _mode }: { mode: "controls" | "settings" 
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 landscape:grid-cols-4 gap-2">
         <StatBox label="Min" value={stats.min.toFixed(3)} unit="mm" />
         <StatBox label="Max" value={stats.max.toFixed(3)} unit="mm" />
         <StatBox label="Range" value={stats.range.toFixed(3)} unit="mm" />

@@ -21,26 +21,26 @@ export function StatusBar() {
         : "bg-orange-500";
 
   const label = !moonraker
-    ? "Moonraker offline"
+    ? "Offline"
     : klippy === "ready"
       ? "Connected"
       : klippy === "startup"
-        ? "Klipper starting"
+        ? "Starting"
         : "Klipper offline";
 
   return (
-    <div className="flex items-center justify-between px-3 py-1.5 bg-card border-b border-border text-sm">
-      <div className="flex items-center gap-2">
-        <div className={`w-2 h-2 rounded-full ${dotColor}`} />
-        {hostname && <span className="font-medium text-foreground">{hostname}</span>}
-        <span className="text-muted-foreground">{label}</span>
+    <div className="flex items-center justify-between px-2 landscape:px-3 py-1.5 bg-card border-b border-border text-sm">
+      <div className="flex items-center gap-1.5 landscape:gap-2 min-w-0">
+        <div className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
+        {hostname && <span className="font-medium text-foreground truncate hidden landscape:inline">{hostname}</span>}
+        <span className="text-muted-foreground truncate">{label}</span>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 landscape:gap-2 shrink-0">
         <PrinterStatusBadge state={printState} />
         <Button
           variant="destructive"
           size="sm"
-          className="font-semibold"
+          className="font-semibold px-2 landscape:px-3"
           onClick={() =>
             showConfirm({
               title: "Emergency Stop",
@@ -49,8 +49,8 @@ export function StatusBar() {
             })
           }
         >
-          <OctagonX size={18} />
-          E-STOP
+          <OctagonX size={16} />
+          <span className="hidden landscape:inline">E-STOP</span>
         </Button>
       </div>
     </div>
@@ -69,7 +69,7 @@ function PrinterStatusBadge({ state }: { state: string }) {
 
   return (
     <span
-      className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${colors[state] ?? colors.standby}`}
+      className={`px-2 landscape:px-2.5 py-0.5 rounded-full text-[10px] landscape:text-xs font-medium capitalize ${colors[state] ?? colors.standby}`}
     >
       {state}
     </span>

@@ -178,12 +178,12 @@ function FanRow({ fanKey, info, speedPresets }: { fanKey: string; info: FanInfo;
             }}
             className="py-2"
           />
-          <div className="flex gap-1.5">
+          <div className="grid grid-cols-3 landscape:flex gap-1.5">
             {speedPresets.map((p) => (
               <Button
                 key={p}
                 variant={pct === p ? "default" : "outline"}
-                className="flex-1 h-10 text-xs"
+                className="landscape:flex-1 h-10 text-xs"
                 onClick={() => applySpeed(p)}
               >
                 {p === 0 ? "Off" : `${p}%`}

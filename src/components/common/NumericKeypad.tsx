@@ -46,15 +46,15 @@ export function NumericKeypad({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
       <div className="bg-card border-t border-border rounded-t-2xl w-full max-w-md p-4 space-y-3 shadow-2xl">
         <div className="text-sm text-muted-foreground font-medium">{title}</div>
-        <div className="text-3xl font-bold tabular-nums text-right px-2">
-          {display || "0"}<span className="text-lg text-muted-foreground ml-1">{unit}</span>
+        <div className="text-2xl landscape:text-3xl font-bold tabular-nums text-right px-2">
+          {display || "0"}<span className="text-base landscape:text-lg text-muted-foreground ml-1">{unit}</span>
         </div>
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-3 gap-1.5 landscape:gap-2.5">
           {keys.map((key) => (
             <Button
               key={key}
               variant="secondary"
-              className="h-14 text-lg"
+              className="h-12 landscape:h-14 text-base landscape:text-lg"
               onClick={() => {
                 if (key === "C") clear();
                 else if (key === "DEL") backspace();
@@ -65,11 +65,11 @@ export function NumericKeypad({
             </Button>
           ))}
         </div>
-        <div className="grid grid-cols-2 gap-2.5">
-          <Button variant="ghost" className="h-12" onClick={onCancel}>
+        <div className="grid grid-cols-2 gap-1.5 landscape:gap-2.5">
+          <Button variant="ghost" className="h-11 landscape:h-12" onClick={onCancel}>
             Cancel
           </Button>
-          <Button className="h-12 font-semibold" onClick={submit}>
+          <Button className="h-11 landscape:h-12 font-semibold" onClick={submit}>
             Set
           </Button>
         </div>

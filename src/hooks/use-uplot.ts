@@ -120,6 +120,8 @@ export function useUPlot() {
       if (!plotRef.current || changed) {
         createPlot(width, height, sensors);
         setLegendKeys(sensors);
+      } else {
+        plotRef.current.setSize({ width, height });
       }
     };
 
