@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from "react";
 import Keyboard from "react-simple-keyboard";
 import "react-simple-keyboard/build/css/index.css";
 import { useKeyboardStore } from "@/stores/keyboard-store";
+import { ChevronDown } from "lucide-react";
 
 export function VirtualKeyboard() {
   const visible = useKeyboardStore((s) => s.visible);
@@ -149,6 +150,13 @@ export function VirtualKeyboard() {
 
   if (!visible) return null;
 
+  const handleClose = useCallback(() => {
+    interactingRef.current = false;
+    const t = useKeyboardStore.getState().target;
+    if (t) t.blur();
+    hide();
+  }, [hide]);
+
   return (
     <div
       ref={containerRef}
@@ -157,6 +165,16 @@ export function VirtualKeyboard() {
         interactingRef.current = true;
       }}
     >
+      {/* Close bar */}
+      <div className="flex justify-end px-2 py-1 bg-card">
+        <button
+          onClick={handleClose}
+          className="flex items-center gap-1 text-xs text-muted-foreground px-2 py-1 rounded active:bg-accent"
+        >
+          <ChevronDown size={14} />
+          Close
+        </button>
+      </div>
       <Keyboard
         keyboardRef={(r) => (kbRef.current = r)}
         onChange={onChange}

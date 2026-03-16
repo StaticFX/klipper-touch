@@ -3,6 +3,7 @@ import { TabBar } from "./TabBar";
 import { StatusBar } from "./StatusBar";
 import { useUiStore, type Tab } from "@/stores/ui-store";
 import { usePrintStore } from "@/stores/print-store";
+import { useKeyboardStore } from "@/stores/keyboard-store";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { PrintPage } from "@/components/print/PrintPage";
 import { ActionsPage } from "@/components/actions/ActionsPage";
@@ -29,6 +30,7 @@ export function AppShell() {
   const printSummary = usePrintStore((s) => s.printSummary);
   const isPrinting = printState === "printing" || printState === "paused";
   const showingSummary = printSummary !== null;
+  const keyboardVisible = useKeyboardStore((s) => s.visible);
   const wasPrinting = useRef(false);
 
   useEffect(() => {
@@ -58,7 +60,7 @@ export function AppShell() {
           );
         })}
       </div>
-      {!isPrinting && !showingSummary && <TabBar />}
+      {!isPrinting && !showingSummary && !keyboardVisible && <TabBar />}
       <VirtualKeyboard />
       <ConnectionOverlay />
       {confirmDialog && (
