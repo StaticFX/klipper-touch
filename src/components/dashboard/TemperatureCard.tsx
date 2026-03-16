@@ -22,9 +22,9 @@ export function TemperatureCard({ label, current, target, power, heater }: Tempe
   return (
     <>
       <Button
-        variant="outline"
+        variant="ghost"
         onClick={() => setShowKeypad(true)}
-        className="h-auto p-3.5 flex-col items-start gap-0 text-left"
+        className="h-auto p-3.5 flex-col items-start gap-0 text-left bg-card border border-border rounded-xl"
       >
         <div className="text-xs text-muted-foreground mb-1">{label}</div>
         <div className="text-[28px] font-bold leading-none tabular-nums">

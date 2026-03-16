@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { useUiStore } from "@/stores/ui-store";
+import { useUiStore, ACCENT_PRESETS } from "@/stores/ui-store";
 import { usePrinterStore } from "@/stores/printer-store";
 import { usePrintStore, type PrintSummary } from "@/stores/print-store";
 import { useToastStore } from "@/stores/toast-store";
@@ -42,6 +42,8 @@ interface SavedNetwork {
 function KlipperTouchSub() {
   const theme = useUiStore((s) => s.theme);
   const toggleTheme = useUiStore((s) => s.toggleTheme);
+  const accentHue = useUiStore((s) => s.accentHue);
+  const setAccentHue = useUiStore((s) => s.setAccentHue);
   const hiddenSensors = useUiStore((s) => s.hiddenSensors);
   const toggleSensor = useUiStore((s) => s.toggleSensor);
   const history = usePrinterStore((s) => s.temperatureHistory);
@@ -82,6 +84,29 @@ function KlipperTouchSub() {
             </Button>
           }
         />
+      </div>
+
+      {/* Accent color */}
+      <div>
+        <div className="text-xs text-muted-foreground mb-2 font-medium">Accent Color</div>
+        <div className="flex flex-wrap gap-2">
+          {ACCENT_PRESETS.map((preset) => {
+            const isActive = accentHue === preset.hue;
+            return (
+              <button
+                key={preset.hue}
+                className={`w-9 h-9 rounded-full border-2 transition-all active:scale-95 flex items-center justify-center ${
+                  isActive ? "border-foreground scale-110" : "border-transparent"
+                }`}
+                style={{ backgroundColor: `oklch(0.6 0.2 ${preset.hue})` }}
+                onClick={() => setAccentHue(preset.hue)}
+                title={preset.name}
+              >
+                {isActive && <Check size={16} className="text-white" />}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Sensor visibility */}

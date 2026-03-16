@@ -20,6 +20,10 @@ export const useToastStore = create<ToastStore>((set) => ({
   toasts: [],
 
   addToast: (message, type = "error") => {
+    // Dedupe: skip if the same message is already showing
+    const existing = useToastStore.getState().toasts;
+    if (existing.some((t) => t.message === message)) return;
+
     const id = nextId++;
     set((s) => ({ toasts: [...s.toasts, { id, message, type }] }));
 
