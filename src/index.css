@@ -143,3 +143,59 @@ body {
   width: 100%;
   height: 100%;
 }
+
+/* ── react-simple-keyboard theme ────────────────────────────────── */
+.hg-theme-klipper {
+  background: var(--color-card);
+  border: none;
+  border-radius: 0;
+  padding: 4px 2px;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.hg-theme-klipper .hg-row {
+  gap: 3px;
+  margin-bottom: 3px;
+}
+
+.hg-theme-klipper .hg-button {
+  background: var(--color-muted);
+  color: var(--color-foreground);
+  border: none;
+  border-radius: var(--radius-md);
+  height: 42px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.hg-theme-klipper .hg-button:active,
+.hg-theme-klipper .hg-button.hg-activeButton {
+  background: var(--color-accent);
+  transform: scale(0.95);
+}
+
+.hg-theme-klipper .hg-button.kb-action-key {
+  background: var(--color-secondary);
+  font-weight: 600;
+  min-width: 48px;
+  max-width: 72px;
+  font-size: 16px;
+}
+
+.hg-theme-klipper .hg-button.kb-space-key {
+  min-width: 200px;
+}
+
+.hg-theme-klipper .hg-button.hg-button-enter {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+/* Keep keyboard buttons from being selectable */
+.keyboard-wrapper * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
