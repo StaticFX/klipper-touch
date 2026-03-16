@@ -171,22 +171,6 @@ export function VirtualKeyboard() {
       {/* Letter/number rows */}
       {rows.map((row, ri) => (
         <div key={ri} className="flex justify-center gap-[3px] mb-[3px]">
-          {/* Shift key on row 3 (letter mode) */}
-          {ri === 2 && !numbers && (
-            <button
-              onMouseDown={preventFocusLoss}
-              onTouchStart={preventFocusLoss}
-              onClick={() => setShifted((s) => !s)}
-              className={`flex items-center justify-center rounded h-10 min-w-[40px] px-2 text-xs font-medium active:scale-95 ${
-                shifted
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground"
-              }`}
-            >
-              <ChevronUp size={16} />
-            </button>
-          )}
-
           {row.map((key) => (
             <button
               key={key}
@@ -198,20 +182,38 @@ export function VirtualKeyboard() {
               {key}
             </button>
           ))}
-
-          {/* Backspace on row 3 */}
-          {ri === 2 && (
-            <button
-              onMouseDown={preventFocusLoss}
-              onTouchStart={preventFocusLoss}
-              onClick={handleBackspace}
-              className="flex items-center justify-center rounded bg-muted text-foreground h-10 min-w-[40px] px-2 active:scale-95 active:bg-accent"
-            >
-              <Delete size={16} />
-            </button>
-          )}
         </div>
       ))}
+
+      {/* Shift + Backspace row */}
+      <div className="flex gap-[3px] mb-[3px]">
+        {!numbers ? (
+          <button
+            onMouseDown={preventFocusLoss}
+            onTouchStart={preventFocusLoss}
+            onClick={() => setShifted((s) => !s)}
+            className={`flex items-center justify-center gap-1 rounded h-10 flex-1 text-xs font-semibold active:scale-95 ${
+              shifted
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-secondary-foreground border border-border"
+            }`}
+          >
+            <ChevronUp size={16} />
+            Shift
+          </button>
+        ) : (
+          <div className="flex-1" />
+        )}
+        <button
+          onMouseDown={preventFocusLoss}
+          onTouchStart={preventFocusLoss}
+          onClick={handleBackspace}
+          className="flex items-center justify-center gap-1 rounded bg-secondary text-secondary-foreground border border-border h-10 flex-1 text-xs font-semibold active:scale-95 active:bg-destructive/20"
+        >
+          <Delete size={16} />
+          Delete
+        </button>
+      </div>
 
       {/* Bottom row: 123/ABC, space, ., enter */}
       <div className="flex gap-[3px]">
