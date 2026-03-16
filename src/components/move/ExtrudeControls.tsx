@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useGcode } from "@/hooks/use-gcode";
+import { Button } from "@/components/ui/button";
 
 export function ExtrudeControls() {
   const { send } = useGcode();
@@ -11,39 +12,28 @@ export function ExtrudeControls() {
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg p-3 space-y-2">
+    <div className="bg-card border border-border rounded-xl p-3 space-y-2">
       <div className="text-xs text-muted-foreground">Extruder</div>
       <div className="flex gap-2">
         {lengths.map((l) => (
-          <button
+          <Button
             key={l}
+            variant={length === l ? "default" : "secondary"}
+            size="sm"
+            className="flex-1"
             onClick={() => setLength(l)}
-            className={`flex-1 min-h-[36px] rounded-lg border text-xs font-medium
-              active:scale-95 transition-transform
-              ${length === l
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-secondary text-secondary-foreground border-border"
-              }`}
           >
             {l}mm
-          </button>
+          </Button>
         ))}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <button
-          onClick={() => extrude(-1)}
-          className="min-h-[48px] rounded-lg bg-secondary border border-border text-sm font-medium
-            active:scale-95 transition-transform"
-        >
+        <Button variant="secondary" className="h-12" onClick={() => extrude(-1)}>
           Retract
-        </button>
-        <button
-          onClick={() => extrude(1)}
-          className="min-h-[48px] rounded-lg bg-secondary border border-border text-sm font-medium
-            active:scale-95 transition-transform"
-        >
+        </Button>
+        <Button variant="secondary" className="h-12" onClick={() => extrude(1)}>
           Extrude
-        </button>
+        </Button>
       </div>
     </div>
   );

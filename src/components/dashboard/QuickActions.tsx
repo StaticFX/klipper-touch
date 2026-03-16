@@ -1,6 +1,7 @@
 import { useGcode } from "@/hooks/use-gcode";
 import { emergencyStop } from "@/lib/moonraker/client";
 import { useUiStore } from "@/stores/ui-store";
+import { Button } from "@/components/ui/button";
 import { Home, Snowflake, PowerOff, OctagonX } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -8,7 +9,7 @@ export function QuickActions() {
   const { send } = useGcode();
   const showConfirm = useUiStore((s) => s.showConfirm);
 
-  const actions: { label: string; icon: LucideIcon; className?: string; action: () => void }[] = [
+  const actions: { label: string; icon: LucideIcon; variant?: "secondary" | "destructive-subtle"; action: () => void }[] = [
     {
       label: "Home All",
       icon: Home,
@@ -30,7 +31,7 @@ export function QuickActions() {
     {
       label: "E-STOP",
       icon: OctagonX,
-      className: "bg-destructive/10 text-destructive border-destructive/30",
+      variant: "destructive-subtle" as const,
       action: () =>
         showConfirm({
           title: "Emergency Stop",
@@ -45,17 +46,15 @@ export function QuickActions() {
       {actions.map((a) => {
         const Icon = a.icon;
         return (
-          <button
+          <Button
             key={a.label}
+            variant={a.variant ?? "secondary"}
+            className="h-auto min-h-[48px] flex-col gap-1 px-2"
             onClick={a.action}
-            className={`min-h-[48px] rounded-lg border border-border text-sm font-medium
-              flex flex-col items-center justify-center gap-1
-              active:scale-95 transition-transform
-              ${a.className ?? "bg-secondary text-secondary-foreground"}`}
           >
             <Icon size={18} />
             <span className="text-xs">{a.label}</span>
-          </button>
+          </Button>
         );
       })}
     </div>

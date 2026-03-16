@@ -3,6 +3,7 @@ import { useFilesStore } from "@/stores/files-store";
 import { startPrint, deleteFile, getThumbnailUrl } from "@/lib/moonraker/client";
 import { useUiStore } from "@/stores/ui-store";
 import { usePrinterStore } from "@/stores/printer-store";
+import { Button } from "@/components/ui/button";
 import { FileText, RefreshCw, Trash2 } from "lucide-react";
 
 function bestThumbnailPath(file: { path: string; thumbnails?: { width: number; relative_path: string }[] }): string | undefined {
@@ -53,16 +54,13 @@ export function FileBrowser() {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 px-3">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-medium text-muted-foreground">G-code Files</h2>
-        <button
-          onClick={fetchFiles}
-          className="flex items-center gap-1 text-xs text-primary active:scale-95"
-        >
+        <Button variant="ghost" size="xs" onClick={fetchFiles}>
           <RefreshCw size={12} />
           Refresh
-        </button>
+        </Button>
       </div>
       {files.length === 0 ? (
         <div className="text-center text-muted-foreground py-8">No files found</div>
@@ -135,16 +133,16 @@ function FileCard({
   const sizeMb = (size / (1024 * 1024)).toFixed(1);
 
   return (
-    <div ref={ref} className="flex items-center gap-2 p-3 bg-card border border-border rounded-lg">
+    <div ref={ref} className="flex items-center gap-2 p-3 bg-card border border-border rounded-xl">
       <button
         onClick={onPrint}
-        className="flex-1 flex items-center gap-3 text-left active:scale-[0.98] transition-transform min-w-0"
+        className="flex-1 flex items-center gap-3 text-left active:scale-[0.98] active:opacity-80 transition-all duration-150 min-w-0"
       >
         {thumbUrl ? (
           <img
             src={thumbUrl}
             alt=""
-            className="w-12 h-12 rounded bg-muted object-cover shrink-0"
+            className="w-12 h-12 rounded-lg bg-muted object-cover shrink-0"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = "none";
               (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
@@ -152,7 +150,7 @@ function FileCard({
           />
         ) : null}
         <div
-          className={`w-12 h-12 rounded bg-muted flex items-center justify-center text-muted-foreground shrink-0 ${thumbUrl ? "hidden" : ""}`}
+          className={`w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-muted-foreground shrink-0 ${thumbUrl ? "hidden" : ""}`}
         >
           <FileText size={20} />
         </div>
@@ -164,15 +162,17 @@ function FileCard({
           </div>
         </div>
       </button>
-      <button
+      <Button
+        variant="ghost"
+        size="icon-sm"
         onClick={(e) => {
           e.stopPropagation();
           onDelete();
         }}
-        className="p-2 rounded-lg text-muted-foreground active:scale-90 active:text-destructive shrink-0"
+        className="text-muted-foreground active:text-destructive shrink-0"
       >
         <Trash2 size={18} />
-      </button>
+      </Button>
     </div>
   );
 }

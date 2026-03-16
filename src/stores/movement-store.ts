@@ -1,6 +1,5 @@
 import { create } from "zustand";
-
-const STORAGE_KEY = "klipper-touch-movement";
+import { getConfig, saveConfig } from "@/lib/config";
 
 interface MovementSettings {
   invertX: boolean;
@@ -11,6 +10,8 @@ interface MovementSettings {
 }
 
 interface MovementStore extends MovementSettings {
+  loaded: boolean;
+  loadFromConfig: () => Promise<void>;
   setInvertX: (v: boolean) => void;
   setInvertY: (v: boolean) => void;
   setInvertZ: (v: boolean) => void;
@@ -18,37 +19,49 @@ interface MovementStore extends MovementSettings {
   setDefaultZSpeed: (v: number) => void;
 }
 
-function load(): Partial<MovementSettings> {
+async function persistToConfig(state: MovementSettings) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
+    const config = await getConfig();
+    config.movement = {
+      invert_x: state.invertX,
+      invert_y: state.invertY,
+      invert_z: state.invertZ,
+      xy_speed: state.defaultXySpeed,
+      z_speed: state.defaultZSpeed,
+    };
+    await saveConfig(config);
+  } catch (e) {
+    console.error("Failed to save movement config:", e);
   }
 }
 
-function save(state: MovementSettings) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    invertX: state.invertX,
-    invertY: state.invertY,
-    invertZ: state.invertZ,
-    defaultXySpeed: state.defaultXySpeed,
-    defaultZSpeed: state.defaultZSpeed,
-  }));
-}
-
-const saved = load();
-
 export const useMovementStore = create<MovementStore>((set, get) => ({
-  invertX: saved.invertX ?? false,
-  invertY: saved.invertY ?? false,
-  invertZ: saved.invertZ ?? false,
-  defaultXySpeed: saved.defaultXySpeed ?? 100,
-  defaultZSpeed: saved.defaultZSpeed ?? 10,
+  loaded: false,
+  invertX: false,
+  invertY: false,
+  invertZ: false,
+  defaultXySpeed: 100,
+  defaultZSpeed: 10,
 
-  setInvertX: (v) => { set({ invertX: v }); save({ ...get(), invertX: v }); },
-  setInvertY: (v) => { set({ invertY: v }); save({ ...get(), invertY: v }); },
-  setInvertZ: (v) => { set({ invertZ: v }); save({ ...get(), invertZ: v }); },
-  setDefaultXySpeed: (v) => { set({ defaultXySpeed: v }); save({ ...get(), defaultXySpeed: v }); },
-  setDefaultZSpeed: (v) => { set({ defaultZSpeed: v }); save({ ...get(), defaultZSpeed: v }); },
+  loadFromConfig: async () => {
+    try {
+      const config = await getConfig();
+      set({
+        loaded: true,
+        invertX: config.movement.invert_x,
+        invertY: config.movement.invert_y,
+        invertZ: config.movement.invert_z,
+        defaultXySpeed: config.movement.xy_speed,
+        defaultZSpeed: config.movement.z_speed,
+      });
+    } catch {
+      set({ loaded: true });
+    }
+  },
+
+  setInvertX: (v) => { set({ invertX: v }); persistToConfig({ ...get(), invertX: v }); },
+  setInvertY: (v) => { set({ invertY: v }); persistToConfig({ ...get(), invertY: v }); },
+  setInvertZ: (v) => { set({ invertZ: v }); persistToConfig({ ...get(), invertZ: v }); },
+  setDefaultXySpeed: (v) => { set({ defaultXySpeed: v }); persistToConfig({ ...get(), defaultXySpeed: v }); },
+  setDefaultZSpeed: (v) => { set({ defaultZSpeed: v }); persistToConfig({ ...get(), defaultZSpeed: v }); },
 }));

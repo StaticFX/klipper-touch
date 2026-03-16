@@ -314,7 +314,7 @@ const MIN_ELEV = 0.05;
 const MAX_ELEV = Math.PI * 0.45;
 const SCALE_PRESETS = [1, 10, 50, 100, 200];
 
-export function BedMeshSection() {
+export function BedMeshSection({ mode: _mode }: { mode: "controls" | "settings" }) {
   const { send, busy } = useGcode();
   const showConfirm = useUiStore((s) => s.showConfirm);
   const mesh = usePrinterStore((s) => s.bedMesh);

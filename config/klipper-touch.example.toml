@@ -29,3 +29,42 @@ name = "Park"
 gcode = "G28\nG0 X150 Y150 Z50 F6000"
 color = "#22c55e"
 confirm = false
+
+[movement]
+invert_x = false
+invert_y = false
+invert_z = false
+xy_speed = 100.0
+z_speed = 10.0
+
+[temperature]
+hotend_presets = [0, 190, 210, 250]
+bed_presets = [0, 60, 70, 110]
+
+[extruder]
+default_feed_amount = 10.0
+default_feed_speed = 5.0
+# Set macro names to use custom load/unload macros
+# Leave empty to use default G-code (heat + extrude/retract)
+load_macro = ""
+unload_macro = ""
+filament_diameter = 1.75
+
+[fan]
+speed_presets = [0, 25, 50, 75, 100]
+
+# Configurable utility shortcuts
+[[utility.shortcuts]]
+name = "Motors Off"
+gcode = "M84"
+confirm = false
+
+[[utility.shortcuts]]
+name = "Restart FW"
+gcode = "FIRMWARE_RESTART"
+confirm = true
+
+[[utility.shortcuts]]
+name = "Bed Mesh"
+gcode = "BED_MESH_CALIBRATE"
+confirm = true

@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useUiStore } from "@/stores/ui-store";
 import { usePrinterStore } from "@/stores/printer-store";
-import { usePrintStore } from "@/stores/print-store";
+import { usePrintStore, type PrintSummary } from "@/stores/print-store";
+import { useSubmenu } from "@/hooks/use-submenu";
 import { checkForUpdate, REPO_URL, type UpdateInfo } from "@/lib/update-checker";
 import {
   ChevronLeft, ChevronRight, Sun, Moon, Wifi, RefreshCw, Info,
@@ -92,10 +93,11 @@ function KlipperTouchSub() {
           {allSensors.map((key) => {
             const visible = !hiddenSensors.includes(key);
             return (
-              <button
+              <Button
                 key={key}
+                variant="outline"
+                className="w-full justify-start h-auto px-3 py-2.5"
                 onClick={() => toggleSensor(key)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg border border-border active:bg-accent/50"
               >
                 {visible ? (
                   <Eye size={16} className="text-primary shrink-0" />
@@ -104,7 +106,7 @@ function KlipperTouchSub() {
                 )}
                 <span className="text-sm flex-1 text-left">{sensorLabel(key)}</span>
                 <Thermometer size={14} className="text-muted-foreground" />
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -243,12 +245,12 @@ function NetworkSub() {
 
       {/* Error display */}
       {error && (
-        <div className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
+        <div className="flex items-center gap-2 p-2 rounded-xl bg-destructive/10 border border-destructive/20">
           <X size={14} className="text-destructive shrink-0" />
           <span className="text-xs text-destructive flex-1">{error}</span>
-          <button onClick={() => setError(null)}>
+          <Button variant="ghost" size="icon-xs" onClick={() => setError(null)}>
             <X size={12} className="text-destructive" />
-          </button>
+          </Button>
         </div>
       )}
 
@@ -307,11 +309,12 @@ function NetworkSub() {
             </div>
           )}
           {wifiList.map((net) => (
-            <button
+            <Button
               key={net.ssid}
+              variant="outline"
+              className="w-full justify-start h-auto px-3 py-2.5"
               onClick={() => handleNetworkTap(net)}
               disabled={net.connected || connecting !== null}
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg border border-border active:bg-accent/50 disabled:opacity-60"
             >
               {signalIcon(net.signal)}
               <span className="text-sm flex-1 text-left truncate">{net.ssid}</span>
@@ -322,7 +325,7 @@ function NetworkSub() {
               {net.security && net.security !== "" && net.security !== "--" && !net.connected && (
                 <Lock size={12} className="text-muted-foreground" />
               )}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -335,16 +338,13 @@ function NetworkSub() {
             {saved.map((s) => (
               <div
                 key={s.name}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border"
               >
                 <Wifi size={14} className="text-muted-foreground shrink-0" />
                 <span className="text-sm flex-1 truncate">{s.name}</span>
-                <button
-                  onClick={() => forgetNetwork(s.name)}
-                  className="p-1.5 rounded-md active:bg-destructive/10"
-                >
+                <Button variant="ghost" size="icon-xs" onClick={() => forgetNetwork(s.name)}>
                   <Trash2 size={14} className="text-destructive" />
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -395,7 +395,7 @@ function AboutSub() {
             />
             {update.updateAvailable && (
               <div className="space-y-2 mt-1">
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 border border-primary/20">
+                <div className="flex items-center gap-2 p-2 rounded-xl bg-primary/10 border border-primary/20">
                   <ArrowUpCircle size={16} className="text-primary shrink-0" />
                   <span className="text-xs text-primary font-medium flex-1">
                     Update available: v{update.latestVersion}
@@ -426,7 +426,7 @@ function AboutSub() {
           href={REPO_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border active:bg-accent/50"
+          className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border active:bg-accent/50 transition-colors duration-150"
         >
           <ExternalLink size={14} className="text-muted-foreground" />
           <span className="text-sm flex-1">GitHub Repository</span>
@@ -437,7 +437,7 @@ function AboutSub() {
             href={update.releaseUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border active:bg-accent/50"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border active:bg-accent/50 transition-colors duration-150"
           >
             <ExternalLink size={14} className="text-muted-foreground" />
             <span className="text-sm flex-1">Latest Release</span>
@@ -453,8 +453,19 @@ function AboutSub() {
   );
 }
 
+const MOCK_SUMMARY: PrintSummary = {
+  filename: "benchy_0.2mm_PLA.gcode",
+  state: "complete",
+  total_duration: 5820,
+  print_duration: 5640,
+  filament_used: 3420,
+  layers: "138 / 138",
+  thumbnailUrl: null,
+};
+
 function DebugSub() {
   const printState = usePrintStore((s) => s.print_stats.state);
+  const summary = usePrintStore((s) => s.printSummary);
   const isMocked = printState === "printing";
 
   const toggleMockPrint = () => {
@@ -511,6 +522,14 @@ function DebugSub() {
     }
   };
 
+  const showSummary = (state: PrintSummary["state"]) => {
+    usePrintStore.setState({ printSummary: { ...MOCK_SUMMARY, state } });
+  };
+
+  const clearSummary = () => {
+    usePrintStore.setState({ printSummary: null });
+  };
+
   return (
     <div className="space-y-4">
       <InfoRow
@@ -524,6 +543,29 @@ function DebugSub() {
       <p className="text-xs text-muted-foreground">
         Simulates an active print to preview the print screen UI.
       </p>
+
+      <div className="border-t border-border pt-4 space-y-2">
+        <div className="text-sm font-medium">Mock Print Summary</div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="flex-1 text-green-500" onClick={() => showSummary("complete")}>
+            Complete
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1 text-orange-500" onClick={() => showSummary("cancelled")}>
+            Cancelled
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1 text-destructive" onClick={() => showSummary("error")}>
+            Error
+          </Button>
+        </div>
+        {summary && (
+          <Button variant="ghost" size="sm" className="w-full" onClick={clearSummary}>
+            Clear Summary
+          </Button>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Shows the print summary screen with mock data. Switch to the Print tab to see it.
+        </p>
+      </div>
     </div>
   );
 }
@@ -548,14 +590,7 @@ const submenus: SubMenu[] = [
 ];
 
 export function SettingsPage() {
-  const [active, setActive] = useState<string | null>(null);
-  const activeTab = useUiStore((s) => s.activeTab);
-  const tabClickCount = useUiStore((s) => s.tabClickCount);
-
-  // Reset submenu whenever user switches tabs or re-clicks Settings
-  useEffect(() => {
-    setActive(null);
-  }, [activeTab, tabClickCount]);
+  const { active, setActive, goBack } = useSubmenu();
 
   const current = submenus.find((s) => s.id === active);
 
@@ -563,13 +598,14 @@ export function SettingsPage() {
     const Component = current.component;
     return (
       <div className="flex flex-col h-full">
-        <button
-          onClick={() => setActive(null)}
-          className="flex items-center gap-2 px-3 py-3 text-sm font-medium text-muted-foreground active:bg-accent/50 border-b border-border shrink-0"
+        <Button
+          variant="ghost"
+          className="justify-start rounded-none border-b border-border shrink-0 text-muted-foreground"
+          onClick={goBack}
         >
           <ChevronLeft size={16} />
           {current.title}
-        </button>
+        </Button>
         {current.fullPage ? (
           <div className="flex-1 min-h-0">
             <Component />
@@ -588,15 +624,16 @@ export function SettingsPage() {
       {submenus.map((item) => {
         const Icon = item.icon;
         return (
-          <button
+          <Button
             key={item.id}
+            variant="ghost"
+            className="justify-start rounded-none px-4 py-3.5 h-auto border-b border-border"
             onClick={() => setActive(item.id)}
-            className="flex items-center gap-3 px-4 py-3.5 border-b border-border active:bg-accent/50"
           >
             <Icon size={18} className="text-muted-foreground shrink-0" />
             <span className="flex-1 text-sm font-medium text-left">{item.title}</span>
             <ChevronRight size={16} className="text-muted-foreground" />
-          </button>
+          </Button>
         );
       })}
     </div>

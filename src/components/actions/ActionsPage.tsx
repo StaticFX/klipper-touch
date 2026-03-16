@@ -5,27 +5,33 @@ import { FanSection } from "./FanSection";
 import { ExtruderSection } from "./ExtruderSection";
 import { BedMeshSection } from "./BedMeshSection";
 import { UtilitySection } from "./UtilitySection";
-import { ChevronLeft, ChevronRight, Move, Thermometer, Fan, Cylinder, Grid3X3, Wrench } from "lucide-react";
+import { useSubmenu } from "@/hooks/use-submenu";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, Move, Thermometer, Fan, Cylinder, Grid3X3, Wrench, Settings } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+
+export type SectionMode = "controls" | "settings";
 
 interface SubMenu {
   id: string;
   title: string;
   icon: LucideIcon;
-  component: React.ComponentType;
+  component: React.ComponentType<{ mode: SectionMode }>;
+  hasSettings: boolean;
 }
 
 const submenus: SubMenu[] = [
-  { id: "move", title: "Movement", icon: Move, component: MovementSection },
-  { id: "temp", title: "Temperature", icon: Thermometer, component: TemperatureSection },
-  { id: "fan", title: "Fan Control", icon: Fan, component: FanSection },
-  { id: "extruder", title: "Extruder", icon: Cylinder, component: ExtruderSection },
-  { id: "bedmesh", title: "Bed Mesh", icon: Grid3X3, component: BedMeshSection },
-  { id: "utility", title: "Utilities", icon: Wrench, component: UtilitySection },
+  { id: "move", title: "Movement", icon: Move, component: MovementSection, hasSettings: true },
+  { id: "temp", title: "Temperature", icon: Thermometer, component: TemperatureSection, hasSettings: true },
+  { id: "fan", title: "Fan Control", icon: Fan, component: FanSection, hasSettings: true },
+  { id: "extruder", title: "Extruder", icon: Cylinder, component: ExtruderSection, hasSettings: true },
+  { id: "bedmesh", title: "Bed Mesh", icon: Grid3X3, component: BedMeshSection, hasSettings: false },
+  { id: "utility", title: "Utilities", icon: Wrench, component: UtilitySection, hasSettings: true },
 ];
 
 export function ActionsPage() {
-  const [active, setActive] = useState<string | null>(null);
+  const { active, setActive, goBack } = useSubmenu();
+  const [mode, setMode] = useState<SectionMode>("controls");
 
   const current = submenus.find((s) => s.id === active);
 
@@ -33,15 +39,35 @@ export function ActionsPage() {
     const Component = current.component;
     return (
       <div className="flex flex-col h-full">
-        <button
-          onClick={() => setActive(null)}
-          className="flex items-center gap-2 px-3 py-3 text-sm font-medium text-muted-foreground active:bg-accent/50 border-b border-border shrink-0"
+        <Button
+          variant="ghost"
+          className="justify-start rounded-none border-b border-border shrink-0 text-muted-foreground"
+          onClick={() => {
+            if (mode === "settings") {
+              setMode("controls");
+            } else {
+              goBack();
+            }
+          }}
         >
           <ChevronLeft size={16} />
-          {current.title}
-        </button>
-        <div className="flex-1 overflow-y-auto p-3">
-          <Component />
+          {mode === "settings" ? `${current.title} Settings` : current.title}
+        </Button>
+        <div className="flex-1 relative overflow-hidden">
+          <div className="absolute inset-0 overflow-y-auto p-3">
+            <Component mode={mode} />
+          </div>
+          {/* Floating settings gear */}
+          {current.hasSettings && mode === "controls" && (
+            <Button
+              variant="secondary"
+              size="icon"
+              className="absolute bottom-3 right-3 rounded-full shadow-lg z-10"
+              onClick={() => setMode("settings")}
+            >
+              <Settings size={18} />
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -52,15 +78,16 @@ export function ActionsPage() {
       {submenus.map((item) => {
         const Icon = item.icon;
         return (
-          <button
+          <Button
             key={item.id}
-            onClick={() => setActive(item.id)}
-            className="flex items-center gap-3 px-4 py-3.5 border-b border-border active:bg-accent/50"
+            variant="ghost"
+            className="justify-start rounded-none px-4 py-3.5 h-auto border-b border-border"
+            onClick={() => { setActive(item.id); setMode("controls"); }}
           >
             <Icon size={18} className="text-muted-foreground shrink-0" />
             <span className="flex-1 text-sm font-medium text-left">{item.title}</span>
             <ChevronRight size={16} className="text-muted-foreground" />
-          </button>
+          </Button>
         );
       })}
     </div>

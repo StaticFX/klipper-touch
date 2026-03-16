@@ -1,6 +1,7 @@
 import { usePrintStore } from "@/stores/print-store";
 import { pausePrint, resumePrint, cancelPrint } from "@/lib/moonraker/client";
 import { useUiStore } from "@/stores/ui-store";
+import { Button } from "@/components/ui/button";
 
 export function PrintControls() {
   const state = usePrintStore((s) => s.print_stats.state);
@@ -9,23 +10,24 @@ export function PrintControls() {
   return (
     <div className="grid grid-cols-2 gap-3">
       {state === "printing" ? (
-        <button
+        <Button
+          variant="secondary"
+          className="h-14 text-base bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
           onClick={pausePrint}
-          className="min-h-[56px] rounded-lg bg-yellow-500/20 text-yellow-400 border border-yellow-500/30
-            text-base font-medium active:scale-95 transition-transform"
         >
           Pause
-        </button>
+        </Button>
       ) : (
-        <button
+        <Button
+          className="h-14 text-base bg-primary/20 text-primary border border-primary/30"
           onClick={resumePrint}
-          className="min-h-[56px] rounded-lg bg-primary/20 text-primary border border-primary/30
-            text-base font-medium active:scale-95 transition-transform"
         >
           Resume
-        </button>
+        </Button>
       )}
-      <button
+      <Button
+        variant="destructive-subtle"
+        className="h-14 text-base"
         onClick={() =>
           showConfirm({
             title: "Cancel Print",
@@ -33,11 +35,9 @@ export function PrintControls() {
             onConfirm: cancelPrint,
           })
         }
-        className="min-h-[56px] rounded-lg bg-destructive/20 text-destructive border border-destructive/30
-          text-base font-medium active:scale-95 transition-transform"
       >
         Cancel
-      </button>
+      </Button>
     </div>
   );
 }

@@ -172,7 +172,7 @@ export function TemperatureGraph() {
   }, [createPlot]);
 
   return (
-    <div className="bg-card border border-border rounded-lg p-2 h-full flex flex-col">
+    <div className="bg-card border border-border rounded-xl p-2 h-full flex flex-col">
       <div className="flex items-center gap-4 mb-1 px-1 shrink-0">
         <span className="text-xs text-muted-foreground">Temperature</span>
         <div className="flex items-center gap-3 ml-auto flex-wrap">

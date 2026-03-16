@@ -15,6 +15,8 @@ interface UiStore {
   confirmDialog: ConfirmDialogState | null;
   showConfirm: (state: ConfirmDialogState) => void;
   hideConfirm: () => void;
+  printMinimized: boolean;
+  setPrintMinimized: (v: boolean) => void;
 }
 
 interface ConfirmDialogState {
@@ -69,4 +71,6 @@ export const useUiStore = create<UiStore>((set, get) => ({
   confirmDialog: null,
   showConfirm: (state) => set({ confirmDialog: state }),
   hideConfirm: () => set({ confirmDialog: null }),
+  printMinimized: false,
+  setPrintMinimized: (v) => set({ printMinimized: v }),
 }));

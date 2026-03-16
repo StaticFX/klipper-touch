@@ -7,11 +7,26 @@ import { ChevronDown } from "lucide-react";
 export function VirtualKeyboard() {
   const visible = useKeyboardStore((s) => s.visible);
   const hide = useKeyboardStore((s) => s.hide);
+  const setHeight = useKeyboardStore((s) => s.setHeight);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const kbRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   // Track when user is interacting with the keyboard so focusout doesn't hide it
   const interactingRef = useRef(false);
+
+  // Measure keyboard height when visible
+  useEffect(() => {
+    if (visible && containerRef.current) {
+      // Wait one frame for layout
+      requestAnimationFrame(() => {
+        if (containerRef.current) {
+          setHeight(containerRef.current.offsetHeight);
+        }
+      });
+    } else if (!visible) {
+      setHeight(0);
+    }
+  }, [visible, setHeight]);
 
   // Native value setters for React controlled inputs
   const nativeInputSetter = useRef(
@@ -148,8 +163,6 @@ export function VirtualKeyboard() {
     [hide, refocusTarget]
   );
 
-  if (!visible) return null;
-
   const handleClose = useCallback(() => {
     interactingRef.current = false;
     const t = useKeyboardStore.getState().target;
@@ -160,13 +173,22 @@ export function VirtualKeyboard() {
   return (
     <div
       ref={containerRef}
-      className="keyboard-wrapper shrink-0 border-t border-border"
+      className="keyboard-wrapper border-t border-border"
+      style={{
+        display: visible ? "block" : "none",
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+        backgroundColor: "var(--color-card)",
+      }}
       onPointerDown={() => {
         interactingRef.current = true;
       }}
     >
       {/* Close bar */}
-      <div className="flex justify-end px-2 py-1 bg-card">
+      <div className="flex justify-end px-2 py-1" style={{ backgroundColor: "var(--color-card)" }}>
         <button
           onClick={handleClose}
           className="flex items-center gap-1 text-xs text-muted-foreground px-2 py-1 rounded active:bg-accent"

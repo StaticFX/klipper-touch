@@ -96,18 +96,15 @@ export function MacrosPage() {
   if (selected) {
     const hasParams = Object.keys(selected.params).length > 0;
     return (
-      <div className="space-y-2">
+      <div className="space-y-2 px-3">
         <div className="flex items-center justify-between">
-          <button
-            onClick={() => { setSelected(null); setParamValues({}); }}
-            className="flex items-center gap-1 text-xs text-primary active:scale-95"
-          >
+          <Button variant="ghost" size="xs" onClick={() => { setSelected(null); setParamValues({}); }}>
             <ChevronLeft size={12} />
             Back
-          </button>
+          </Button>
         </div>
 
-        <div className="p-3 bg-card border border-border rounded-lg space-y-4">
+        <div className="p-3 bg-card border border-border rounded-xl space-y-4">
           <div>
             <div className="text-base font-semibold font-mono">{selected.name}</div>
             {selected.description && (
@@ -146,7 +143,7 @@ export function MacrosPage() {
 
   // List view — flat layout, same pattern as FileBrowser
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 px-3">
       <div className="flex items-center justify-between">
         <div className="relative flex-1">
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -157,13 +154,10 @@ export function MacrosPage() {
             className="pl-8 h-9"
           />
         </div>
-        <button
-          onClick={fetchMacros}
-          className="flex items-center gap-1 text-xs text-primary active:scale-95 ml-2"
-        >
+        <Button variant="ghost" size="xs" onClick={fetchMacros} className="ml-2">
           <RefreshCw size={12} />
           Refresh
-        </button>
+        </Button>
       </div>
 
       <div className="text-xs text-muted-foreground px-1">
@@ -177,9 +171,9 @@ export function MacrosPage() {
       ) : (
         <div className="space-y-1">
           {filtered.map((macro) => (
-            <div key={macro.name} className="flex items-center gap-2 p-3 bg-card border border-border rounded-lg">
+            <div key={macro.name} className="flex items-center gap-2 p-3 bg-card border border-border rounded-xl">
               <button
-                className="flex-1 flex items-center gap-3 text-left active:scale-[0.98] transition-transform min-w-0"
+                className="flex-1 flex items-center gap-3 text-left active:scale-[0.98] active:opacity-80 transition-all duration-150 min-w-0"
                 onClick={() => openMacro(macro)}
               >
                 <div className="flex-1 min-w-0">

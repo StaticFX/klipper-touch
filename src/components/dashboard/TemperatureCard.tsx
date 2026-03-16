@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { setTemperature } from "@/lib/moonraker/client";
+import { Button } from "@/components/ui/button";
 import { NumericKeypad } from "@/components/common/NumericKeypad";
 
 interface TemperatureCardProps {
@@ -20,15 +21,16 @@ export function TemperatureCard({ label, current, target, power, heater }: Tempe
 
   return (
     <>
-      <button
+      <Button
+        variant="outline"
         onClick={() => setShowKeypad(true)}
-        className="bg-card border border-border rounded-lg p-3 text-left active:scale-[0.98] transition-transform"
+        className="h-auto p-3.5 flex-col items-start gap-0 text-left"
       >
         <div className="text-xs text-muted-foreground mb-1">{label}</div>
         <div className="text-[28px] font-bold leading-none tabular-nums">
           {current.toFixed(1)}°
         </div>
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex items-center justify-between mt-2 w-full">
           <span className="text-sm text-muted-foreground">
             Target: {target > 0 ? `${target}°` : "Off"}
           </span>
@@ -36,7 +38,7 @@ export function TemperatureCard({ label, current, target, power, heater }: Tempe
             {power > 0 ? `Heating ${Math.round(power * 100)}%` : "Idle"}
           </span>
         </div>
-      </button>
+      </Button>
       {showKeypad && (
         <NumericKeypad
           title={`Set ${label} Temperature`}

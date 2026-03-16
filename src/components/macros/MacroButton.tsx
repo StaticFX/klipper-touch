@@ -1,6 +1,7 @@
 import { type MacroConfig } from "@/lib/config";
 import { useGcode } from "@/hooks/use-gcode";
 import { useUiStore } from "@/stores/ui-store";
+import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
 export function MacroButton({ macro }: { macro: MacroConfig }) {
@@ -20,12 +21,11 @@ export function MacroButton({ macro }: { macro: MacroConfig }) {
   };
 
   return (
-    <button
+    <Button
+      variant="secondary"
+      size="xl"
       onClick={handlePress}
       disabled={busy}
-      className="min-h-[64px] rounded-lg border border-border text-sm font-medium
-        active:scale-90 transition-transform flex items-center justify-center gap-2
-        disabled:opacity-50 disabled:pointer-events-none"
       style={{
         backgroundColor: macro.color ? `${macro.color}20` : undefined,
         borderColor: macro.color ? `${macro.color}40` : undefined,
@@ -34,6 +34,6 @@ export function MacroButton({ macro }: { macro: MacroConfig }) {
     >
       {busy && <Loader2 size={14} className="animate-spin" />}
       {macro.name}
-    </button>
+    </Button>
   );
 }

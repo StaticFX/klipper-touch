@@ -113,15 +113,17 @@ export function ConsolePage() {
 
       {/* Scroll-to-bottom indicator */}
       {!autoScroll && (
-        <button
+        <Button
+          variant="outline"
+          size="icon-sm"
+          className="absolute right-3 bottom-20 rounded-full shadow-md"
           onClick={() => {
             setAutoScroll(true);
             scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
           }}
-          className="absolute right-3 bottom-20 p-2 rounded-full bg-card border border-border shadow-md active:scale-95"
         >
           <ArrowDown size={16} />
-        </button>
+        </Button>
       )}
 
       {/* Input bar */}

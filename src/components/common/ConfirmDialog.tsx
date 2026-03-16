@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+
 interface ConfirmDialogProps {
   title: string;
   message: string;
@@ -8,32 +10,24 @@ interface ConfirmDialogProps {
 
 export function ConfirmDialog({ title, message, imageUrl, onConfirm, onCancel }: ConfirmDialogProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-card border border-border rounded-xl p-5 mx-4 max-w-sm w-full space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-card border border-border rounded-2xl p-5 mx-4 max-w-sm w-full space-y-4 shadow-2xl">
         {imageUrl && (
           <img
             src={imageUrl}
             alt=""
-            className="w-full max-h-[200px] object-contain rounded-lg bg-muted"
+            className="w-full max-h-[200px] object-contain rounded-xl bg-muted"
           />
         )}
         <h3 className="text-base font-semibold">{title}</h3>
         <p className="text-sm text-muted-foreground">{message}</p>
         <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            className="flex-1 min-h-[48px] rounded-lg bg-secondary text-secondary-foreground
-              border border-border text-sm font-medium active:scale-95 transition-transform"
-          >
+          <Button variant="secondary" className="flex-1 h-12" onClick={onCancel}>
             Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="flex-1 min-h-[48px] rounded-lg bg-primary text-primary-foreground
-              text-sm font-medium active:scale-95 transition-transform"
-          >
+          </Button>
+          <Button className="flex-1 h-12 font-semibold" onClick={onConfirm}>
             Confirm
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![
             commands::config::get_config,
+            commands::config::save_config,
             commands::network::get_network_info,
             commands::network::scan_wifi,
             commands::network::connect_wifi,

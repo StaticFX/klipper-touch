@@ -1,5 +1,6 @@
 import { useGcode } from "@/hooks/use-gcode";
 import { usePrinterStore } from "@/stores/printer-store";
+import { Button } from "@/components/ui/button";
 
 export function HomeButtons() {
   const { send } = useGcode();
@@ -17,18 +18,14 @@ export function HomeButtons() {
       {axes.map((a) => {
         const allHomed = a.axes.split("").every((ax) => homedAxes.includes(ax));
         return (
-          <button
+          <Button
             key={a.label}
+            variant={allHomed ? "default" : "secondary"}
+            className={`h-12 ${allHomed ? "bg-primary/15 text-primary border border-primary/20" : ""}`}
             onClick={() => send(a.cmd)}
-            className={`min-h-[48px] rounded-lg border text-sm font-medium
-              active:scale-95 transition-transform
-              ${allHomed
-                ? "bg-primary/10 text-primary border-primary/20"
-                : "bg-secondary text-secondary-foreground border-border"
-              }`}
           >
             {a.label}
-          </button>
+          </Button>
         );
       })}
     </div>

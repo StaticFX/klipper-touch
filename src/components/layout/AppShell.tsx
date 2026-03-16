@@ -26,22 +26,36 @@ export function AppShell() {
   const setActiveTab = useUiStore((s) => s.setActiveTab);
   const confirmDialog = useUiStore((s) => s.confirmDialog);
   const hideConfirm = useUiStore((s) => s.hideConfirm);
+  const printMinimized = useUiStore((s) => s.printMinimized);
+  const setPrintMinimized = useUiStore((s) => s.setPrintMinimized);
   const printState = usePrintStore((s) => s.print_stats.state);
   const printSummary = usePrintStore((s) => s.printSummary);
   const isPrinting = printState === "printing" || printState === "paused";
   const showingSummary = printSummary !== null;
   const keyboardVisible = useKeyboardStore((s) => s.visible);
+  const keyboardHeight = useKeyboardStore((s) => s.height);
   const wasPrinting = useRef(false);
+  const showTabBar = (!isPrinting || printMinimized) && !keyboardVisible;
 
+  // Auto-switch to print tab when print starts; back to dashboard when it ends
   useEffect(() => {
     if (isPrinting && !wasPrinting.current) {
+      setPrintMinimized(false);
       setActiveTab("print");
     }
     if (!isPrinting && wasPrinting.current && !showingSummary) {
+      setPrintMinimized(false);
       setActiveTab("dashboard");
     }
     wasPrinting.current = isPrinting;
-  }, [isPrinting, showingSummary, setActiveTab]);
+  }, [isPrinting, showingSummary, setActiveTab, setPrintMinimized]);
+
+  // Un-minimize when user navigates to print tab
+  useEffect(() => {
+    if (activeTab === "print" && isPrinting && printMinimized) {
+      setPrintMinimized(false);
+    }
+  }, [activeTab, isPrinting, printMinimized, setPrintMinimized]);
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
@@ -53,15 +67,18 @@ export function AppShell() {
             <div
               key={tab}
               className="absolute inset-0 overflow-y-auto"
-              style={{ display: activeTab === tab ? "block" : "none" }}
+              style={{
+                display: activeTab === tab ? "block" : "none",
+                bottom: keyboardVisible ? keyboardHeight : 0,
+              }}
             >
               <Page />
             </div>
           );
         })}
+        <VirtualKeyboard />
       </div>
-      {!isPrinting && !showingSummary && !keyboardVisible && <TabBar />}
-      <VirtualKeyboard />
+      {showTabBar && <TabBar />}
       <ConnectionOverlay />
       {confirmDialog && (
         <ConfirmDialog

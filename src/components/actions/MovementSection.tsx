@@ -1,17 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useGcode } from "@/hooks/use-gcode";
 import { usePrinterStore } from "@/stores/printer-store";
 import { useMovementStore } from "@/stores/movement-store";
 import { NumericKeypad } from "@/components/common/NumericKeypad";
+import type { SectionMode } from "./ActionsPage";
 import {
   ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
-  ChevronUp, ChevronDown, ChevronLeft, Home, Loader2, Settings, Power,
+  ChevronUp, ChevronDown, Home, Loader2, Power,
 } from "lucide-react";
 
 const STEP_SIZES = [0.1, 1, 10, 100];
 
-function MovementSettings({ onBack }: { onBack: () => void }) {
+/* ── Settings ────────────────────────────────────────── */
+
+function MovementSettings() {
   const invertX = useMovementStore((s) => s.invertX);
   const invertY = useMovementStore((s) => s.invertY);
   const invertZ = useMovementStore((s) => s.invertZ);
@@ -26,14 +29,6 @@ function MovementSettings({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="space-y-4">
-      <button
-        onClick={onBack}
-        className="flex items-center gap-1.5 text-sm text-muted-foreground active:text-foreground"
-      >
-        <ChevronLeft size={16} />
-        Back
-      </button>
-
       <div className="text-sm font-medium">Movement Settings</div>
 
       {/* Invert axes */}
@@ -42,17 +37,14 @@ function MovementSettings({ onBack }: { onBack: () => void }) {
         <div className="flex gap-2">
           {([["X", invertX, setInvertX], ["Y", invertY, setInvertY], ["Z", invertZ, setInvertZ]] as const).map(
             ([label, value, setter]) => (
-              <button
+              <Button
                 key={label}
+                variant={value ? "default" : "secondary"}
+                className="flex-1 h-12"
                 onClick={() => setter(!value)}
-                className={`flex-1 h-12 rounded-lg border text-sm font-medium ${
-                  value
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-card border-border text-muted-foreground"
-                }`}
               >
                 {label} {value ? "(inverted)" : "(normal)"}
-              </button>
+              </Button>
             ),
           )}
         </div>
@@ -62,24 +54,22 @@ function MovementSettings({ onBack }: { onBack: () => void }) {
       <div>
         <div className="text-[11px] text-muted-foreground mb-1.5">Default Speeds</div>
         <div className="space-y-2">
-          <button
+          <Button
+            variant="outline"
+            className="w-full h-12 justify-between px-4"
             onClick={() => setKeypad({ field: "xy", current: xySpeed })}
-            className="w-full text-left"
           >
-            <div className="h-12 rounded-lg border border-border px-4 flex items-center justify-between bg-card active:bg-accent/50">
-              <span className="text-sm text-muted-foreground">XY Speed</span>
-              <span className="text-sm font-medium tabular-nums">{xySpeed} mm/s</span>
-            </div>
-          </button>
-          <button
+            <span className="text-sm text-muted-foreground">XY Speed</span>
+            <span className="text-sm font-medium tabular-nums">{xySpeed} mm/s</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full h-12 justify-between px-4"
             onClick={() => setKeypad({ field: "z", current: zSpeed })}
-            className="w-full text-left"
           >
-            <div className="h-12 rounded-lg border border-border px-4 flex items-center justify-between bg-card active:bg-accent/50">
-              <span className="text-sm text-muted-foreground">Z Speed</span>
-              <span className="text-sm font-medium tabular-nums">{zSpeed} mm/s</span>
-            </div>
-          </button>
+            <span className="text-sm text-muted-foreground">Z Speed</span>
+            <span className="text-sm font-medium tabular-nums">{zSpeed} mm/s</span>
+          </Button>
         </div>
       </div>
 
@@ -102,14 +92,25 @@ function MovementSettings({ onBack }: { onBack: () => void }) {
   );
 }
 
-export function MovementSection() {
+/* ── Main controls ───────────────────────────────────── */
+
+export function MovementSection({ mode }: { mode: SectionMode }) {
   const { send, busy } = useGcode();
   const [stepSize, setStepSize] = useState(10);
-  const [page, setPage] = useState<"controls" | "settings">("controls");
 
-  const zPos = usePrinterStore((s) => s.toolhead.position[2]);
+  const loaded = useMovementStore((s) => s.loaded);
+  const loadFromConfig = useMovementStore((s) => s.loadFromConfig);
+
+  useEffect(() => {
+    if (!loaded) loadFromConfig();
+  }, [loaded, loadFromConfig]);
+
+  const pos = usePrinterStore((s) => s.toolhead.position);
   const homedAxes = usePrinterStore((s) => s.toolhead.homed_axes);
-  const allHomed = "xyz".split("").every((a) => homedAxes.includes(a));
+  const xHomed = homedAxes.includes("x");
+  const yHomed = homedAxes.includes("y");
+  const zHomed = homedAxes.includes("z");
+  const allHomed = xHomed && yHomed && zHomed;
 
   const invertX = useMovementStore((s) => s.invertX);
   const invertY = useMovementStore((s) => s.invertY);
@@ -117,13 +118,11 @@ export function MovementSection() {
   const xySpeed = useMovementStore((s) => s.defaultXySpeed);
   const zSpeed = useMovementStore((s) => s.defaultZSpeed);
 
+  if (mode === "settings") return <MovementSettings />;
+
   const xDir = invertX ? -1 : 1;
   const yDir = invertY ? -1 : 1;
   const zDir = invertZ ? -1 : 1;
-
-  if (page === "settings") {
-    return <MovementSettings onBack={() => setPage("controls")} />;
-  }
 
   const moveXY = (axis: string, dir: number) => {
     const f = xySpeed * 60;
@@ -138,11 +137,25 @@ export function MovementSection() {
 
   return (
     <div className="space-y-4">
-      {/* Two-column layout: controls left, settings right */}
+      {/* Position readout */}
+      <div className="grid grid-cols-3 gap-2">
+        {(["X", "Y", "Z"] as const).map((axis, i) => {
+          const homed = homedAxes.includes(axis.toLowerCase());
+          return (
+            <div key={axis} className="rounded-lg border border-border px-3 py-2 bg-card">
+              <div className="text-[10px] text-muted-foreground">{axis}</div>
+              <div className={`text-sm font-semibold tabular-nums ${homed ? "" : "text-muted-foreground"}`}>
+                {homed ? pos[i].toFixed(2) : "?"}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Two-column layout: jog left, actions right */}
       <div className="flex gap-4">
-        {/* Left: XY cross + Z — centered */}
+        {/* Left: XY cross + Z */}
         <div className="flex gap-3 shrink-0">
-          {/* XY Pad */}
           <div className="grid grid-cols-3 gap-1.5">
             <div />
             <Button variant="outline" className={jogBtn} onClick={() => moveXY("Y", yDir)}>
@@ -165,14 +178,13 @@ export function MovementSection() {
             <div />
           </div>
 
-          {/* Z Controls */}
           <div className="flex flex-col items-center gap-1.5 w-16">
             <Button variant="outline" className="h-16 w-full rounded-xl" onClick={() => moveZ(zDir)}>
               <ChevronUp size={22} />
             </Button>
             <div className="text-center py-1">
               <div className="text-[10px] text-muted-foreground">Z</div>
-              <div className="text-xs font-semibold tabular-nums">{zPos.toFixed(2)}</div>
+              <div className="text-xs font-semibold tabular-nums">{pos[2].toFixed(2)}</div>
             </div>
             <Button variant="outline" className="h-16 w-full rounded-xl" onClick={() => moveZ(-zDir)}>
               <ChevronDown size={22} />
@@ -180,9 +192,8 @@ export function MovementSection() {
           </div>
         </div>
 
-        {/* Right: step size, speeds, home, gear */}
+        {/* Right: step size + homing + actions */}
         <div className="flex-1 space-y-3 min-w-0">
-          {/* Step size */}
           <div>
             <div className="text-[11px] text-muted-foreground mb-1">Step (mm)</div>
             <div className="grid grid-cols-4 gap-1">
@@ -199,47 +210,65 @@ export function MovementSection() {
             </div>
           </div>
 
-          {/* Speeds (read-only display, editable in settings) */}
+          <div>
+            <div className="text-[11px] text-muted-foreground mb-1">Homing</div>
+            <div className="grid grid-cols-4 gap-1">
+              <Button
+                variant={allHomed ? "secondary" : "default"}
+                className="h-10 text-xs"
+                disabled={busy}
+                onClick={() => send("G28")}
+              >
+                {busy ? <Loader2 size={14} className="animate-spin" /> : <Home size={14} />}
+                All
+              </Button>
+              <Button
+                variant={xHomed ? "secondary" : "outline"}
+                className="h-10 text-xs"
+                disabled={busy}
+                onClick={() => send("G28 X")}
+              >
+                X
+              </Button>
+              <Button
+                variant={yHomed ? "secondary" : "outline"}
+                className="h-10 text-xs"
+                disabled={busy}
+                onClick={() => send("G28 Y")}
+              >
+                Y
+              </Button>
+              <Button
+                variant={zHomed ? "secondary" : "outline"}
+                className="h-10 text-xs"
+                disabled={busy}
+                onClick={() => send("G28 Z")}
+              >
+                Z
+              </Button>
+            </div>
+          </div>
+
+          {/* Speed info */}
           <div className="grid grid-cols-2 gap-1.5">
             <div className="rounded-lg border border-border px-2.5 py-1.5 bg-card">
-              <div className="text-[10px] text-muted-foreground">XY</div>
+              <div className="text-[10px] text-muted-foreground">XY Speed</div>
               <div className="text-xs font-medium tabular-nums">{xySpeed} mm/s</div>
             </div>
             <div className="rounded-lg border border-border px-2.5 py-1.5 bg-card">
-              <div className="text-[10px] text-muted-foreground">Z</div>
+              <div className="text-[10px] text-muted-foreground">Z Speed</div>
               <div className="text-xs font-medium tabular-nums">{zSpeed} mm/s</div>
             </div>
           </div>
 
-          {/* Home + Motors Off + Settings */}
-          <div className='flex flex-col gap-1.5'>
-            <div className="flex gap-1.5">
-              <Button
-                variant={allHomed ? "secondary" : "default"}
-                className="flex-1 h-12"
-                disabled={busy}
-                onClick={() => send("G28")}
-              >
-                {busy ? <Loader2 size={18} className="animate-spin" /> : <Home size={18} />}
-                {busy ? "Homing…" : "Home"}
-              </Button>
-              <Button
-                variant="outline"
-                className="h-12 w-12 shrink-0"
-                onClick={() => setPage("settings")}
-              >
-                <Settings size={18} />
-              </Button>
-          </div>
-                        <Button
-                variant="outline"
-                className="text-destructive"
-                onClick={() => send("M84")}
-              >
-                <Power size={18} />
-                Disable steppers
-              </Button>
-          </div>
+          <Button
+            variant="outline"
+            className="w-full h-10 text-xs text-destructive"
+            onClick={() => send("M84")}
+          >
+            <Power size={14} />
+            Disable Motors
+          </Button>
         </div>
       </div>
     </div>

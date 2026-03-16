@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Button } from "@/components/ui/button";
 
 interface NetworkInfo {
   hostname: string;
@@ -26,12 +27,9 @@ export function NetworkPage() {
     <div className="p-3 space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-medium text-muted-foreground">Network</h2>
-        <button
-          onClick={refresh}
-          className="text-xs text-primary active:scale-95"
-        >
+        <Button variant="ghost" size="xs" onClick={refresh}>
           Refresh
-        </button>
+        </Button>
       </div>
 
       {error && (
@@ -39,7 +37,7 @@ export function NetworkPage() {
       )}
 
       {info && (
-        <div className="bg-card border border-border rounded-lg divide-y divide-border">
+        <div className="bg-card border border-border rounded-xl divide-y divide-border">
           <InfoRow label="Hostname" value={info.hostname} />
           <InfoRow label="IP Address" value={info.ip_address ?? "N/A"} />
           <InfoRow label="WiFi SSID" value={info.wifi_ssid ?? "N/A"} />

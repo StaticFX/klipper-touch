@@ -2,6 +2,7 @@ import { usePrinterStore } from "@/stores/printer-store";
 import { usePrintStore } from "@/stores/print-store";
 import { useUiStore } from "@/stores/ui-store";
 import { emergencyStop } from "@/lib/moonraker/client";
+import { Button } from "@/components/ui/button";
 import { OctagonX } from "lucide-react";
 
 export function StatusBar() {
@@ -36,7 +37,10 @@ export function StatusBar() {
       </div>
       <div className="flex items-center gap-2">
         <PrinterStatusBadge state={printState} />
-        <button
+        <Button
+          variant="destructive"
+          size="sm"
+          className="font-semibold"
           onClick={() =>
             showConfirm({
               title: "Emergency Stop",
@@ -44,11 +48,10 @@ export function StatusBar() {
               onConfirm: () => emergencyStop(),
             })
           }
-          className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-destructive text-destructive-foreground text-sm font-bold active:scale-95 transition-transform"
         >
           <OctagonX size={18} />
           E-STOP
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -66,7 +69,7 @@ function PrinterStatusBadge({ state }: { state: string }) {
 
   return (
     <span
-      className={`px-2 py-0.5 rounded-md text-xs font-medium capitalize ${colors[state] ?? colors.standby}`}
+      className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${colors[state] ?? colors.standby}`}
     >
       {state}
     </span>
