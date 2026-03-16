@@ -1,6 +1,8 @@
 import { useRef, useEffect, useCallback } from "react";
 
 interface UseCanvas3DOptions {
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
   draw: (rotation: number, elevation: number) => void;
   defaultRotation?: number;
   defaultElevation?: number;
@@ -10,6 +12,8 @@ interface UseCanvas3DOptions {
 }
 
 export function useCanvas3D({
+  canvasRef,
+  containerRef,
   draw,
   defaultRotation = Math.PI * 0.22,
   defaultElevation = Math.PI * 0.16,
@@ -17,8 +21,6 @@ export function useCanvas3D({
   maxElevation = Math.PI * 0.45,
   sensitivity = 0.008,
 }: UseCanvas3DOptions) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const rotRef = useRef(defaultRotation);
   const elevRef = useRef(defaultElevation);
   const rafRef = useRef(0);
@@ -35,7 +37,7 @@ export function useCanvas3D({
     const ro = new ResizeObserver(() => redraw());
     ro.observe(container);
     return () => ro.disconnect();
-  }, [redraw]);
+  }, [redraw, containerRef]);
 
   // Touch / mouse rotation
   useEffect(() => {
@@ -112,7 +114,7 @@ export function useCanvas3D({
       canvas.removeEventListener("touchend", onTouchEnd);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [redraw, sensitivity, minElevation, maxElevation]);
+  }, [redraw, sensitivity, minElevation, maxElevation, canvasRef]);
 
   const resetView = useCallback(() => {
     rotRef.current = defaultRotation;
@@ -120,5 +122,5 @@ export function useCanvas3D({
     redraw();
   }, [defaultRotation, defaultElevation, redraw]);
 
-  return { canvasRef, containerRef, rotRef, elevRef, resetView };
+  return { resetView };
 }

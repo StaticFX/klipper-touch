@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from "react";
+import { useMemo, useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useGcode } from "@/hooks/use-gcode";
 import { useUiStore } from "@/stores/ui-store";
@@ -313,6 +313,8 @@ export function BedMeshSection({ mode: _mode }: { mode: "controls" | "settings" 
   const theme = useUiStore((s) => s.theme);
   const isDark = theme === "dark";
   const [zExaggeration, setZExaggeration] = useState(50);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const stats = useMemo(() => {
     if (!mesh?.mesh_matrix?.length) return null;
@@ -350,9 +352,11 @@ export function BedMeshSection({ mode: _mode }: { mode: "controls" | "settings" 
     ctx.scale(dpr, dpr);
 
     drawMesh(ctx, w, h, mesh.mesh_matrix, isDark, rotation, elevation, zExaggeration, meta);
-  }, [mesh?.mesh_matrix, isDark, zExaggeration, meta]);
+  }, [canvasRef, containerRef, mesh?.mesh_matrix, isDark, zExaggeration, meta]);
 
-  const { canvasRef, containerRef, resetView } = useCanvas3D({
+  const { resetView } = useCanvas3D({
+    canvasRef,
+    containerRef,
     draw,
     defaultRotation: DEFAULT_ROT,
     defaultElevation: DEFAULT_ELEV,
