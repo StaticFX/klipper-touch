@@ -1,8 +1,9 @@
-import { useRef, useEffect, useMemo, useCallback, useState } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useGcode } from "@/hooks/use-gcode";
 import { useUiStore } from "@/stores/ui-store";
 import { usePrinterStore } from "@/stores/printer-store";
+import { useCanvas3D } from "@/hooks/use-canvas-3d";
 import { Grid3X3, RefreshCw, Loader2 } from "lucide-react";
 
 /* ── Color helpers ─────────────────────────────────────── */
@@ -82,8 +83,6 @@ function drawMesh(
   const maxZ = Math.max(...flat);
   const absMax = Math.max(Math.abs(minZ), Math.abs(maxZ));
 
-  // Z scale: exaggeration factor controls visual height
-  // At 1x, the max deviation fills ~5% of the view. At 100x, fills ~25%.
   const baseZScale = absMax > 0 ? 0.005 : 1;
   const zScale = baseZScale * zExaggeration;
 
@@ -98,7 +97,6 @@ function drawMesh(
   const labelBg = dark ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.7)";
   const axisColor = dark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.25)";
 
-  /** Draw text with a rounded background pill for readability */
   function labelWithBg(
     text: string,
     x: number,
@@ -237,12 +235,11 @@ function drawMesh(
     ctx.stroke();
   }
 
-  // ── Axis labels (drawn last so they're always on top) ──
+  // ── Axis labels ──
   const xLen = meta.meshMax[0] - meta.meshMin[0];
   const yLen = meta.meshMax[1] - meta.meshMin[1];
   const fontSize = Math.max(9, Math.min(11, w * 0.018));
 
-  // Find the four projected floor corners
   const floorCorners = [
     { label: "00", ...project(0, 0, floorZ) },
     { label: "10", ...project(1, 0, floorZ) },
@@ -255,21 +252,18 @@ function drawMesh(
     y: (floorCorners[0].y + floorCorners[1].y + floorCorners[2].y + floorCorners[3].y) / 4,
   };
 
-  // X label on the bottom-most edge
   const xEdge1Mid = { x: (floorCorners[0].x + floorCorners[1].x) / 2, y: (floorCorners[0].y + floorCorners[1].y) / 2 };
   const xEdge2Mid = { x: (floorCorners[3].x + floorCorners[2].x) / 2, y: (floorCorners[3].y + floorCorners[2].y) / 2 };
   const xMid = xEdge1Mid.y >= xEdge2Mid.y ? xEdge1Mid : xEdge2Mid;
   const xOffY = xMid.y > center.y ? 22 : -22;
   labelWithBg(`X · ${xLen.toFixed(0)} mm`, xMid.x, xMid.y + xOffY, "center", xOffY > 0 ? "top" : "bottom");
 
-  // Y label on the left-most edge
   const yEdge1Mid = { x: (floorCorners[0].x + floorCorners[3].x) / 2, y: (floorCorners[0].y + floorCorners[3].y) / 2 };
   const yEdge2Mid = { x: (floorCorners[1].x + floorCorners[2].x) / 2, y: (floorCorners[1].y + floorCorners[2].y) / 2 };
   const yMid = yEdge1Mid.x <= yEdge2Mid.x ? yEdge1Mid : yEdge2Mid;
   const yOffX = yMid.x < center.x ? -18 : 18;
   labelWithBg(`Y · ${yLen.toFixed(0)} mm`, yMid.x + yOffX, yMid.y, yOffX < 0 ? "right" : "left", "middle");
 
-  // Z axis line + ticks at the most forward corner
   const cornerCoords: Record<string, [number, number]> = { "00": [0, 0], "10": [1, 0], "11": [1, 1], "01": [0, 1] };
   const zCorner = [...floorCorners].sort((a, b) => b.y - a.y)[0];
   const [zcx, zcy] = cornerCoords[zCorner.label];
@@ -310,8 +304,6 @@ function drawMesh(
 
 const DEFAULT_ROT = Math.PI * 0.22;
 const DEFAULT_ELEV = Math.PI * 0.16;
-const MIN_ELEV = 0.05;
-const MAX_ELEV = Math.PI * 0.45;
 const SCALE_PRESETS = [1, 10, 50, 100, 200];
 
 export function BedMeshSection({ mode: _mode }: { mode: "controls" | "settings" }) {
@@ -320,13 +312,7 @@ export function BedMeshSection({ mode: _mode }: { mode: "controls" | "settings" 
   const mesh = usePrinterStore((s) => s.bedMesh);
   const theme = useUiStore((s) => s.theme);
   const isDark = theme === "dark";
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const [zExaggeration, setZExaggeration] = useState(50);
-
-  const rotRef = useRef(DEFAULT_ROT);
-  const elevRef = useRef(DEFAULT_ELEV);
-  const rafRef = useRef(0);
 
   const stats = useMemo(() => {
     if (!mesh?.mesh_matrix?.length) return null;
@@ -344,7 +330,7 @@ export function BedMeshSection({ mode: _mode }: { mode: "controls" | "settings" 
     meshMax: mesh?.mesh_max ?? [0, 0],
   }), [mesh?.mesh_min, mesh?.mesh_max]);
 
-  const draw = useCallback(() => {
+  const draw = useCallback((rotation: number, elevation: number) => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container || !mesh?.mesh_matrix?.length) return;
@@ -363,95 +349,14 @@ export function BedMeshSection({ mode: _mode }: { mode: "controls" | "settings" 
     if (!ctx) return;
     ctx.scale(dpr, dpr);
 
-    drawMesh(ctx, w, h, mesh.mesh_matrix, isDark, rotRef.current, elevRef.current, zExaggeration, meta);
+    drawMesh(ctx, w, h, mesh.mesh_matrix, isDark, rotation, elevation, zExaggeration, meta);
   }, [mesh?.mesh_matrix, isDark, zExaggeration, meta]);
 
-  useEffect(() => {
-    draw();
-    const container = containerRef.current;
-    if (!container) return;
-    const ro = new ResizeObserver(() => draw());
-    ro.observe(container);
-    return () => ro.disconnect();
-  }, [draw]);
-
-  // Touch / mouse rotation
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    let dragging = false;
-    let lastX = 0;
-    let lastY = 0;
-
-    function scheduleRedraw() {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = requestAnimationFrame(() => draw());
-    }
-
-    function onMove(dx: number, dy: number) {
-      rotRef.current += dx * 0.008;
-      elevRef.current = Math.max(MIN_ELEV, Math.min(MAX_ELEV, elevRef.current - dy * 0.008));
-      scheduleRedraw();
-    }
-
-    function onMouseDown(e: MouseEvent) { dragging = true; lastX = e.clientX; lastY = e.clientY; e.preventDefault(); }
-    function onMouseMove(e: MouseEvent) {
-      if (!dragging) return;
-      onMove(e.clientX - lastX, e.clientY - lastY);
-      lastX = e.clientX; lastY = e.clientY;
-    }
-    function onMouseUp() { dragging = false; }
-
-    let startX = 0;
-    let startY = 0;
-    let touchLocked = false;
-
-    function onTouchStart(e: TouchEvent) {
-      if (e.touches.length !== 1) return;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      lastX = startX;
-      lastY = startY;
-      dragging = false;
-      touchLocked = false;
-    }
-    function onTouchMove(e: TouchEvent) {
-      if (e.touches.length !== 1) return;
-      const tx = e.touches[0].clientX, ty = e.touches[0].clientY;
-      const dx = tx - startX, dy = ty - startY;
-
-      // Lock to rotation if horizontal movement dominates
-      if (!touchLocked && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
-        touchLocked = true;
-        dragging = Math.abs(dx) >= Math.abs(dy);
-      }
-
-      if (dragging) {
-        e.preventDefault();
-        onMove(tx - lastX, ty - lastY);
-      }
-      lastX = tx; lastY = ty;
-    }
-    function onTouchEnd() { dragging = false; touchLocked = false; }
-
-    canvas.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    canvas.addEventListener("touchstart", onTouchStart, { passive: false });
-    canvas.addEventListener("touchmove", onTouchMove, { passive: false });
-    canvas.addEventListener("touchend", onTouchEnd);
-
-    return () => {
-      canvas.removeEventListener("mousedown", onMouseDown);
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-      canvas.removeEventListener("touchstart", onTouchStart);
-      canvas.removeEventListener("touchmove", onTouchMove);
-      canvas.removeEventListener("touchend", onTouchEnd);
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, [draw]);
+  const { canvasRef, containerRef, resetView } = useCanvas3D({
+    draw,
+    defaultRotation: DEFAULT_ROT,
+    defaultElevation: DEFAULT_ELEV,
+  });
 
   const handleCalibrate = () => {
     showConfirm({
@@ -459,12 +364,6 @@ export function BedMeshSection({ mode: _mode }: { mode: "controls" | "settings" 
       message: "Run automatic bed mesh calibration? Printer must be homed first.",
       onConfirm: () => send("BED_MESH_CALIBRATE"),
     });
-  };
-
-  const handleReset = () => {
-    rotRef.current = DEFAULT_ROT;
-    elevRef.current = DEFAULT_ELEV;
-    draw();
   };
 
   if (!mesh?.mesh_matrix?.length || !stats) {
@@ -492,7 +391,7 @@ export function BedMeshSection({ mode: _mode }: { mode: "controls" | "settings" 
           {mesh.profile_name || "Active Mesh"}
         </div>
         <div className="flex gap-1.5">
-          <Button variant="ghost" className="h-9 text-xs px-2" onClick={handleReset}>
+          <Button variant="ghost" className="h-9 text-xs px-2" onClick={resetView}>
             Reset View
           </Button>
           <Button variant="outline" className="h-9 text-xs" disabled={busy} onClick={handleCalibrate}>

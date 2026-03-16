@@ -90,14 +90,14 @@ function UtilitySettings() {
           </div>
           <Input
             value={editing.name}
-            onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+            onChange={(e) => setEditing((prev) => prev ? { ...prev, name: e.target.value } : prev)}
             placeholder="Name (e.g. Motors Off)"
             className="h-10 text-sm"
             autoComplete="off"
           />
           <Input
             value={editing.gcode}
-            onChange={(e) => setEditing({ ...editing, gcode: e.target.value.toUpperCase() })}
+            onChange={(e) => setEditing((prev) => prev ? { ...prev, gcode: e.target.value.toUpperCase() } : prev)}
             placeholder="G-code or Macro (e.g. M84)"
             className="h-10 font-mono text-sm"
             autoCapitalize="characters"
@@ -108,7 +108,7 @@ function UtilitySettings() {
             <Button
               variant={editing.confirm ? "default" : "outline"}
               size="sm"
-              onClick={() => setEditing({ ...editing, confirm: !editing.confirm })}
+              onClick={() => setEditing((prev) => prev ? { ...prev, confirm: !prev.confirm } : prev)}
             >
               {editing.confirm ? "Confirm: On" : "Confirm: Off"}
             </Button>

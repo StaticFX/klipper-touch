@@ -1,10 +1,12 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useCallback } from "react";
 import { useFilesStore } from "@/stores/files-store";
 import { startPrint, deleteFile, getThumbnailUrl } from "@/lib/moonraker/client";
 import { useUiStore } from "@/stores/ui-store";
 import { usePrinterStore } from "@/stores/printer-store";
+import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 import { Button } from "@/components/ui/button";
 import { FileText, RefreshCw, Trash2 } from "lucide-react";
+import { useEffect } from "react";
 
 function bestThumbnailPath(file: { path: string; thumbnails?: { width: number; relative_path: string }[] }): string | undefined {
   if (!file.thumbnails?.length) return undefined;
@@ -105,28 +107,13 @@ function FileCard({
   onPrint: () => void;
   onDelete: () => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
   const fetchMetadata = useFilesStore((s) => s.fetchMetadata);
 
-  // Lazy-load metadata when the card scrolls into view
-  const handleIntersect = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      if (entries[0]?.isIntersecting) {
-        fetchMetadata(filename);
-      }
-    },
-    [filename, fetchMetadata]
-  );
+  const onIntersect = useCallback(() => {
+    fetchMetadata(filename);
+  }, [filename, fetchMetadata]);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(handleIntersect, {
-      rootMargin: "200px",
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [handleIntersect]);
+  const ref = useIntersectionObserver(onIntersect);
 
   const name = filename.split("/").pop() ?? filename;
   const date = new Date(modified * 1000).toLocaleDateString();
@@ -158,7 +145,7 @@ function FileCard({
           <div className="text-sm font-medium truncate">{name}</div>
           <div className="text-xs text-muted-foreground">
             {sizeMb} MB · {date}
-            {estimatedTime && ` · ${formatDuration(estimatedTime)}`}
+            {estimatedTime ? ` · ${formatDuration(estimatedTime)}` : null}
           </div>
         </div>
       </button>

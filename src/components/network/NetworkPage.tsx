@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Button } from "@/components/ui/button";
 
@@ -13,15 +13,15 @@ export function NetworkPage() {
   const [info, setInfo] = useState<NetworkInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const refresh = () => {
+  const refresh = useCallback(() => {
     invoke<NetworkInfo>("get_network_info")
       .then(setInfo)
       .catch((e) => setError(String(e)));
-  };
+  }, []);
 
   useEffect(() => {
     refresh();
-  }, []);
+  }, [refresh]);
 
   return (
     <div className="p-3 space-y-3">

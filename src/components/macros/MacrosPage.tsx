@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { getGcodeHelp, getMacroParams, sendGcode } from "@/lib/moonraker/client";
 import { usePrinterStore } from "@/stores/printer-store";
 import { Button } from "@/components/ui/button";
@@ -59,13 +59,15 @@ export function MacrosPage() {
     if (connected && klippyReady) fetchMacros();
   }, [connected, klippyReady, fetchMacros]);
 
-  const filtered = filter
-    ? macros.filter(
-        (m) =>
-          m.name.toLowerCase().includes(filter.toLowerCase()) ||
-          m.description.toLowerCase().includes(filter.toLowerCase())
-      )
-    : macros;
+  const filtered = useMemo(() => {
+    if (!filter) return macros;
+    const q = filter.toLowerCase();
+    return macros.filter(
+      (m) =>
+        m.name.toLowerCase().includes(q) ||
+        m.description.toLowerCase().includes(q)
+    );
+  }, [macros, filter]);
 
   const handleRun = async (macro: MacroInfo) => {
     const parts = [macro.name];
@@ -120,7 +122,7 @@ export function MacrosPage() {
                   <label className="text-xs text-muted-foreground font-mono">{key}</label>
                   <Input
                     value={paramValues[key] ?? ""}
-                    onChange={(e) => setParamValues({ ...paramValues, [key]: e.target.value })}
+                    onChange={(e) => setParamValues((prev) => ({ ...prev, [key]: e.target.value }))}
                     placeholder={`Default: ${defaultVal}`}
                     className="h-9 font-mono text-sm"
                   />
