@@ -3,11 +3,11 @@ import { useTemperature } from "@/hooks/use-temperature";
 import { usePrinterStore } from "@/stores/printer-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useGcode } from "@/hooks/use-gcode";
-import { setTemperature, setFanSpeed, excludeObject } from "@/lib/moonraker/client";
+import { setTemperature, setFanSpeed, excludeObject, setPressureAdvance } from "@/lib/moonraker/client";
 import { NumericKeypad } from "@/components/common/NumericKeypad";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Minus, Plus, Fan, Ban, Home } from "lucide-react";
+import { Minus, Plus, Fan, Ban, Home, Undo2 } from "lucide-react";
 
 export function AdjustTab() {
   const { extruder, bed } = useTemperature();
@@ -15,6 +15,7 @@ export function AdjustTab() {
   const extrudeFactor = usePrinterStore((s) => s.gcode_move.extrude_factor);
   const zOffset = usePrinterStore((s) => s.gcode_move.homing_origin[2]);
   const fanSpeed = usePrinterStore((s) => s.fans["fan"]?.speed ?? 0);
+  const pa = usePrinterStore((s) => s.extruder.pressure_advance ?? 0);
   const excludeObj = usePrinterStore((s) => s.excludeObject);
   const showConfirm = useUiStore((s) => s.showConfirm);
   const setPrintMinimized = useUiStore((s) => s.setPrintMinimized);
@@ -31,6 +32,7 @@ export function AdjustTab() {
   const extrudePct = Math.round(extrudeFactor * 100);
   const fanPct = Math.round(fanSpeed * 100);
   const [localFanPct, setLocalFanPct] = useState<number | null>(null);
+  const [localPa, setLocalPa] = useState<number | null>(null);
   const hasObjects = excludeObj.objects.length > 0;
 
   const goToMenu = () => {
@@ -93,6 +95,31 @@ export function AdjustTab() {
         onStep={(delta) => send(`M220 S${Math.max(10, Math.min(300, speedPct + delta))}`)} />
       <PctAdjust label="Extrusion Rate" value={extrudePct}
         onStep={(delta) => send(`M221 S${Math.max(50, Math.min(200, extrudePct + delta))}`)} />
+
+      {/* Pressure Advance */}
+      <Card>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Undo2 size={14} className="text-muted-foreground" />
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Pressure Advance</span>
+          </div>
+          <button
+            className="text-sm font-bold tabular-nums active:text-primary transition-colors"
+            onClick={() => setKeypadTarget({
+              title: "Pressure Advance", value: pa, min: 0, max: 1.5, unit: "",
+              onSubmit: (v) => { setPressureAdvance(v); setKeypadTarget(null); },
+            })}
+          >
+            {(localPa ?? pa).toFixed(3)}
+          </button>
+        </div>
+        <Slider
+          min={0} max={0.15} step={0.001}
+          value={[localPa ?? pa]}
+          onValueChange={([v]) => setLocalPa(v)}
+          onValueCommit={([v]) => { setLocalPa(null); setPressureAdvance(v); }}
+        />
+      </Card>
 
       {/* Exclude Object */}
       {hasObjects && (

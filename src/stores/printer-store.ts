@@ -6,6 +6,9 @@ import type {
   GcodeMoveStatus,
   MotionReportStatus,
   ExcludeObjectStatus,
+  FirmwareRetractionStatus,
+  InputShaperStatus,
+  QueryEndstopsStatus,
 } from "@/lib/moonraker/types";
 
 export interface TemperatureSample {
@@ -30,6 +33,11 @@ export interface BedMeshData {
   profiles: Record<string, { points: number[][] }>;
 }
 
+export interface ConfigPendingState {
+  pending: boolean;
+  items: Record<string, Record<string, string>>;
+}
+
 interface ConnectionState {
   moonrakerConnected: boolean;
   klippyState: KlippyState;
@@ -47,7 +55,11 @@ interface PrinterStore extends ConnectionState {
   extraTemps: Record<string, number>;
   fans: Record<string, FanInfo>;
   excludeObject: ExcludeObjectStatus;
+  firmwareRetraction: FirmwareRetractionStatus | null;
+  inputShaper: InputShaperStatus | null;
+  queryEndstops: QueryEndstopsStatus | null;
   bedMesh: BedMeshData | null;
+  configPending: ConfigPendingState;
   temperatureHistory: TemperatureSample[];
 
   setMoonrakerConnected: (connected: boolean, error?: string) => void;
@@ -81,6 +93,7 @@ export const usePrinterStore = create<PrinterStore>((set, get) => ({
     homed_axes: "",
     max_velocity: 0,
     max_accel: 0,
+    minimum_cruise_ratio: 0.5,
     square_corner_velocity: 0,
     print_time: 0,
     estimated_print_time: 0,
@@ -100,7 +113,11 @@ export const usePrinterStore = create<PrinterStore>((set, get) => ({
   extraTemps: {},
   fans: {},
   excludeObject: { current_object: null, excluded_objects: [], objects: [] },
+  firmwareRetraction: null,
+  inputShaper: null,
+  queryEndstops: null,
   bedMesh: null,
+  configPending: { pending: false, items: {} },
   temperatureHistory: [],
 
   setMoonrakerConnected: (connected, error) =>
@@ -139,6 +156,24 @@ export const usePrinterStore = create<PrinterStore>((set, get) => ({
       updates.excludeObject = { ...get().excludeObject, ...(data.exclude_object as Partial<ExcludeObjectStatus>) };
     }
 
+    // Handle firmware retraction
+    if (data.firmware_retraction) {
+      const current = get().firmwareRetraction;
+      updates.firmwareRetraction = { ...current, ...(data.firmware_retraction as Partial<FirmwareRetractionStatus>) } as FirmwareRetractionStatus;
+    }
+
+    // Handle input shaper
+    if (data.input_shaper) {
+      const current = get().inputShaper;
+      updates.inputShaper = { ...current, ...(data.input_shaper as Partial<InputShaperStatus>) } as InputShaperStatus;
+    }
+
+    // Handle query_endstops
+    if (data.query_endstops) {
+      const current = get().queryEndstops;
+      updates.queryEndstops = { ...current, ...(data.query_endstops as Partial<QueryEndstopsStatus>) } as QueryEndstopsStatus;
+    }
+
     // Handle bed mesh
     if (data.bed_mesh) {
       const mesh = data.bed_mesh as Partial<BedMeshData>;
@@ -148,6 +183,19 @@ export const usePrinterStore = create<PrinterStore>((set, get) => ({
       } else if (current && mesh.profile_name !== undefined) {
         updates.bedMesh = { ...current, ...mesh } as BedMeshData;
       }
+    }
+
+    // Handle configfile (save_config pending)
+    if (data.configfile) {
+      const cf = data.configfile as Partial<{
+        save_config_pending: boolean;
+        save_config_pending_items: Record<string, Record<string, string>>;
+      }>;
+      const current = get().configPending;
+      updates.configPending = {
+        pending: cf.save_config_pending ?? current.pending,
+        items: cf.save_config_pending_items ?? current.items,
+      };
     }
 
     // Handle fan objects and extra temp sensors

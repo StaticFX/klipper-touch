@@ -25,3 +25,8 @@ config.dev.toml
 *.njsproj
 *.sln
 *.sw?
+.claude
+
+# Virtual printer
+printer_data/
+.virtual-printer/

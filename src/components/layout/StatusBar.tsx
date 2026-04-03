@@ -1,16 +1,20 @@
 import { usePrinterStore } from "@/stores/printer-store";
 import { usePrintStore } from "@/stores/print-store";
 import { useUiStore } from "@/stores/ui-store";
-import { emergencyStop } from "@/lib/moonraker/client";
+import { emergencyStop, saveKlipperConfig } from "@/lib/moonraker/client";
 import { Button } from "@/components/ui/button";
-import { OctagonX } from "lucide-react";
+import { OctagonX, Save } from "lucide-react";
 
 export function StatusBar() {
   const moonraker = usePrinterStore((s) => s.moonrakerConnected);
   const klippy = usePrinterStore((s) => s.klippyState);
   const hostname = usePrinterStore((s) => s.hostname);
+  const configPending = usePrinterStore((s) => s.configPending.pending);
   const printState = usePrintStore((s) => s.print_stats.state);
   const showConfirm = useUiStore((s) => s.showConfirm);
+  const estopStyle = useUiStore((s) => s.estopStyle);
+  const estopConfirm = useUiStore((s) => s.estopConfirm);
+  const showEstopButton = estopStyle === "statusbar" || estopStyle === "both";
 
   const dotColor = !moonraker
     ? "bg-red-500"
@@ -37,21 +41,45 @@ export function StatusBar() {
       </div>
       <div className="flex items-center gap-1.5 landscape:gap-2 shrink-0">
         <PrinterStatusBadge state={printState} />
-        <Button
-          variant="destructive"
-          size="sm"
-          className="font-semibold px-2 landscape:px-3"
-          onClick={() =>
-            showConfirm({
-              title: "Emergency Stop",
-              message: "This will immediately halt the printer. Continue?",
-              onConfirm: () => emergencyStop(),
-            })
-          }
-        >
-          <OctagonX size={16} />
-          <span className="hidden landscape:inline">E-STOP</span>
-        </Button>
+        {configPending && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="px-2 landscape:px-3 text-yellow-500 border-yellow-500/40"
+            disabled={printState === "printing" || printState === "paused"}
+            onClick={() =>
+              showConfirm({
+                title: "Save Config",
+                message: "Save pending configuration changes to printer.cfg? This will restart Klipper.",
+                onConfirm: () => saveKlipperConfig(),
+              })
+            }
+          >
+            <Save size={14} />
+            <span className="hidden landscape:inline">Save</span>
+          </Button>
+        )}
+        {showEstopButton && (
+          <Button
+            variant="destructive"
+            size="sm"
+            className="font-semibold px-2 landscape:px-3"
+            onClick={() => {
+              if (estopConfirm) {
+                showConfirm({
+                  title: "Emergency Stop",
+                  message: "This will immediately halt the printer. Continue?",
+                  onConfirm: () => emergencyStop(),
+                });
+              } else {
+                emergencyStop();
+              }
+            }}
+          >
+            <OctagonX size={16} />
+            <span className="hidden landscape:inline">E-STOP</span>
+          </Button>
+        )}
       </div>
     </div>
   );

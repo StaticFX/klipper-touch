@@ -8,6 +8,7 @@ interface NumericKeypadProps {
   unit: string;
   min: number;
   max: number;
+  allowDecimal?: boolean;
   onSubmit: (value: number) => void;
   onCancel: () => void;
 }
@@ -18,16 +19,19 @@ export function NumericKeypad({
   unit,
   min,
   max,
+  allowDecimal,
   onSubmit,
   onCancel,
 }: NumericKeypadProps) {
   const [display, setDisplay] = useState(initialValue > 0 ? String(initialValue) : "");
 
-  const append = (digit: string) => {
+  const append = (char: string) => {
     setDisplay((d) => {
-      const next = d + digit;
+      if (char === "." && d.includes(".")) return d;
+      const next = d + char;
+      if (next === ".") return "0.";
       const num = Number(next);
-      if (num > max) return d;
+      if (isNaN(num) || num > max) return d;
       return next;
     });
   };
@@ -40,7 +44,9 @@ export function NumericKeypad({
     onSubmit(Math.max(min, Math.min(max, num)));
   };
 
-  const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "DEL"];
+  const keys = allowDecimal
+    ? ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "DEL"]
+    : ["1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "DEL"];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
@@ -57,7 +63,10 @@ export function NumericKeypad({
               className="h-12 landscape:h-14 text-base landscape:text-lg"
               onClick={() => {
                 if (key === "C") clear();
-                else if (key === "DEL") backspace();
+                else if (key === "DEL") {
+                  if (display.length <= 1) clear();
+                  else backspace();
+                }
                 else append(key);
               }}
             >

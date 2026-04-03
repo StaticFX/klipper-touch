@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { useSubmenu } from "@/hooks/use-submenu";
 import {
-  ChevronLeft, ChevronRight, Wifi, Info, PlugZap, Bug, Monitor, Terminal,
+  ChevronLeft, ChevronRight, Wifi, Info, PlugZap, Bug, Monitor, Terminal, Gauge,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { KlipperTouchSettings } from "./KlipperTouchSettings";
 import { ConnectionSettings } from "./ConnectionSettings";
 import { NetworkSettings } from "./NetworkSettings";
+import { LimitsSettings } from "./LimitsSettings";
 import { AboutSettings } from "./AboutSettings";
 import { DebugSettings } from "./DebugSettings";
 import { ConsolePage } from "@/components/console/ConsolePage";
@@ -22,6 +23,7 @@ interface SubMenu {
 const submenus: SubMenu[] = [
   { id: "console", title: "Terminal", icon: Terminal, component: ConsolePage, fullPage: true },
   { id: "klipper-touch", title: "Klipper Touch", icon: Monitor, component: KlipperTouchSettings },
+  { id: "limits", title: "Printer Limits", icon: Gauge, component: LimitsSettings },
   { id: "connection", title: "Connection", icon: PlugZap, component: ConnectionSettings },
   { id: "network", title: "Network", icon: Wifi, component: NetworkSettings },
   { id: "about", title: "About", icon: Info, component: AboutSettings },

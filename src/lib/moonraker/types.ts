@@ -48,6 +48,7 @@ export interface ToolheadStatus {
   homed_axes: string;
   max_velocity: number;
   max_accel: number;
+  minimum_cruise_ratio: number;
   square_corner_velocity: number;
   print_time: number;
   estimated_print_time: number;
@@ -102,7 +103,54 @@ export interface GcodeThumbnail {
 export interface ExcludeObjectStatus {
   current_object: string | null;
   excluded_objects: string[];
-  objects: { name: string }[];
+  objects: { name: string; center?: [number, number]; polygon?: [number, number][] }[];
+}
+
+export interface FirmwareRetractionStatus {
+  retract_length: number;
+  retract_speed: number;
+  unretract_extra_length: number;
+  unretract_speed: number;
+}
+
+export interface InputShaperStatus {
+  shaper_type_x: string;
+  shaper_type_y: string;
+  shaper_freq_x: number;
+  shaper_freq_y: number;
+  damping_ratio_x: number;
+  damping_ratio_y: number;
+}
+
+export interface QueryEndstopsStatus {
+  last_query: Record<string, unknown>; // e.g. { "x": "open", "y": "open", "z": "TRIGGERED" }
+}
+
+export interface HistoryJob {
+  job_id: string;
+  exists: boolean;
+  end_time: number;
+  filament_used: number;
+  filename: string;
+  metadata: {
+    thumbnails?: { relative_path: string; width: number; height: number }[];
+    estimated_time?: number;
+    slicer?: string;
+    layer_height?: number;
+    object_height?: number;
+  };
+  print_duration: number;
+  status: "completed" | "cancelled" | "error" | "in_progress";
+  start_time: number;
+  total_duration: number;
+}
+
+export interface HistoryTotals {
+  total_jobs: number;
+  total_time: number;
+  total_filament_used: number;
+  longest_job: number;
+  longest_print: number;
 }
 
 export interface MoonrakerResponse<T = unknown> {

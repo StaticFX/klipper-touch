@@ -8,6 +8,7 @@ import type { LucideIcon } from "lucide-react";
 export function QuickActions() {
   const { send } = useGcode();
   const showConfirm = useUiStore((s) => s.showConfirm);
+  const estopConfirm = useUiStore((s) => s.estopConfirm);
 
   const actions: { label: string; icon: LucideIcon; variant?: "secondary" | "destructive-subtle"; action: () => void }[] = [
     {
@@ -32,12 +33,17 @@ export function QuickActions() {
       label: "E-STOP",
       icon: OctagonX,
       variant: "destructive-subtle" as const,
-      action: () =>
-        showConfirm({
-          title: "Emergency Stop",
-          message: "This will immediately stop the printer. Continue?",
-          onConfirm: () => emergencyStop(),
-        }),
+      action: () => {
+        if (estopConfirm) {
+          showConfirm({
+            title: "Emergency Stop",
+            message: "This will immediately stop the printer. Continue?",
+            onConfirm: () => emergencyStop(),
+          });
+        } else {
+          emergencyStop();
+        }
+      },
     },
   ];
 

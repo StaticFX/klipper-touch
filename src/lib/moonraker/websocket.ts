@@ -17,9 +17,10 @@ const SUBSCRIBED_OBJECTS: Record<string, string[] | null> = {
   heater_bed: null,
   fan: null,
   bed_mesh: null,
+  configfile: ["save_config_pending", "save_config_pending_items"],
   print_stats: null,
   exclude_object: null,
-  toolhead: ["position", "homed_axes", "max_velocity", "max_accel", "square_corner_velocity"],
+  toolhead: ["position", "homed_axes", "max_velocity", "max_accel", "minimum_cruise_ratio", "square_corner_velocity"],
   gcode_move: [
     "gcode_position",
     "homing_origin",
@@ -41,6 +42,9 @@ const TEMP_SENSOR_PREFIXES = ["heater_generic ", "temperature_sensor "];
 function isTempSensor(name: string): boolean {
   return TEMP_SENSOR_PREFIXES.some((p) => name.startsWith(p));
 }
+
+// Objects to subscribe to only if they exist on the printer
+const OPTIONAL_OBJECTS = ["firmware_retraction", "input_shaper", "query_endstops"];
 
 // Singleton so the rest of the app can call moonraker.call()
 let instance: MoonrakerWebSocket | null = null;
@@ -145,6 +149,8 @@ export class MoonrakerWebSocket {
           extraObjects[obj] = null;
         } else if (isTempSensor(obj)) {
           extraObjects[obj] = ["temperature"];
+        } else if (OPTIONAL_OBJECTS.includes(obj)) {
+          extraObjects[obj] = null;
         }
       }
       const allObjects = { ...SUBSCRIBED_OBJECTS, ...extraObjects };

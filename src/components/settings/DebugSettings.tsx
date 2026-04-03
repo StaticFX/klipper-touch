@@ -53,6 +53,7 @@ export function DebugSettings() {
           homed_axes: "xyz",
           max_velocity: 300,
           max_accel: 5000,
+          minimum_cruise_ratio: 0.5,
           square_corner_velocity: 5.0,
           print_time: 2710,
           estimated_print_time: 5420,

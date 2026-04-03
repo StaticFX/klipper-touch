@@ -1,19 +1,28 @@
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { useUiStore, ACCENT_PRESETS } from "@/stores/ui-store";
+import { useUiStore, ACCENT_PRESETS, type EstopStyle } from "@/stores/ui-store";
 import { usePrinterStore } from "@/stores/printer-store";
+import { CUSTOM_THEMES } from "@/lib/themes";
 import { InfoRow } from "./InfoRow";
-import { Sun, Moon, Thermometer, Eye, EyeOff, Check } from "lucide-react";
+import { Sun, Moon, Thermometer, Eye, EyeOff, Check, OctagonX, ShieldAlert, ShieldOff, Palette } from "lucide-react";
 
 export function KlipperTouchSettings() {
   const theme = useUiStore((s) => s.theme);
   const toggleTheme = useUiStore((s) => s.toggleTheme);
   const accentHue = useUiStore((s) => s.accentHue);
   const setAccentHue = useUiStore((s) => s.setAccentHue);
+  const themePreset = useUiStore((s) => s.themePreset);
+  const setThemePreset = useUiStore((s) => s.setThemePreset);
   const hiddenSensors = useUiStore((s) => s.hiddenSensors);
   const toggleSensor = useUiStore((s) => s.toggleSensor);
+  const estopStyle = useUiStore((s) => s.estopStyle);
+  const setEstopStyle = useUiStore((s) => s.setEstopStyle);
+  const estopConfirm = useUiStore((s) => s.estopConfirm);
+  const setEstopConfirm = useUiStore((s) => s.setEstopConfirm);
   const history = usePrinterStore((s) => s.temperatureHistory);
   const extraTemps = usePrinterStore((s) => s.extraTemps);
+
+  const isCustomTheme = themePreset !== "default";
 
   const allSensors = useMemo(() => {
     const keys = new Set<string>();
@@ -51,26 +60,112 @@ export function KlipperTouchSettings() {
         />
       </div>
 
-      {/* Accent color */}
+      {/* Theme preset */}
       <div>
-        <div className="text-xs text-muted-foreground mb-2 font-medium">Accent Color</div>
-        <div className="flex flex-wrap gap-1.5 landscape:gap-2">
-          {ACCENT_PRESETS.map((preset) => {
-            const isActive = accentHue === preset.hue;
+        <div className="text-xs text-muted-foreground mb-2 font-medium flex items-center gap-1.5">
+          <Palette size={12} />
+          Color Theme
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          <Button
+            variant={themePreset === "default" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setThemePreset("default")}
+          >
+            Default
+          </Button>
+          {CUSTOM_THEMES.map((t) => {
+            const vars = theme === "dark" ? t.dark : t.light;
             return (
-              <button
-                key={preset.hue}
-                className={`w-8 h-8 landscape:w-9 landscape:h-9 rounded-full border-2 transition-all active:scale-95 flex items-center justify-center ${
-                  isActive ? "border-foreground scale-110" : "border-transparent"
-                }`}
-                style={{ backgroundColor: `oklch(0.6 0.2 ${preset.hue})` }}
-                onClick={() => setAccentHue(preset.hue)}
-                title={preset.name}
+              <Button
+                key={t.id}
+                variant={themePreset === t.id ? "default" : "outline"}
+                size="sm"
+                className="gap-2"
+                onClick={() => setThemePreset(t.id)}
               >
-                {isActive && <Check size={16} className="text-white" />}
-              </button>
+                <span
+                  className="w-3 h-3 rounded-full border border-current/20 shrink-0"
+                  style={{ backgroundColor: vars.primary }}
+                />
+                {t.name}
+              </Button>
             );
           })}
+        </div>
+      </div>
+
+      {/* Accent color — only when using default theme */}
+      {!isCustomTheme && (
+        <div>
+          <div className="text-xs text-muted-foreground mb-2 font-medium">Accent Color</div>
+          <div className="flex flex-wrap gap-1.5 landscape:gap-2">
+            {ACCENT_PRESETS.map((preset) => {
+              const isActive = accentHue === preset.hue;
+              return (
+                <button
+                  key={preset.hue}
+                  className={`w-8 h-8 landscape:w-9 landscape:h-9 rounded-full border-2 transition-all active:scale-95 flex items-center justify-center ${
+                    isActive ? "border-foreground scale-110" : "border-transparent"
+                  }`}
+                  style={{ backgroundColor: `oklch(0.6 0.2 ${preset.hue})` }}
+                  onClick={() => setAccentHue(preset.hue)}
+                  title={preset.name}
+                >
+                  {isActive && <Check size={16} className="text-white" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* E-Stop */}
+      <div>
+        <div className="text-xs text-muted-foreground mb-2 font-medium flex items-center gap-1.5">
+          <OctagonX size={12} />
+          Emergency Stop
+        </div>
+        <div className="space-y-3">
+          <div>
+            <p className="text-[11px] text-muted-foreground mb-2">Button placement</p>
+            <div className="flex gap-1.5">
+              {([
+                { value: "statusbar", label: "Status Bar" },
+                { value: "floating", label: "Floating" },
+                { value: "both", label: "Both" },
+              ] as const).map((opt) => (
+                <Button
+                  key={opt.value}
+                  variant={estopStyle === opt.value ? "default" : "outline"}
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setEstopStyle(opt.value as EstopStyle)}
+                >
+                  {opt.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <InfoRow
+            label="Require confirmation"
+            value={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEstopConfirm(!estopConfirm)}
+                className="gap-2"
+              >
+                {estopConfirm ? <ShieldAlert size={14} /> : <ShieldOff size={14} />}
+                {estopConfirm ? "On" : "Off"}
+              </Button>
+            }
+          />
+          {!estopConfirm && (
+            <p className="text-[11px] text-destructive">
+              Warning: E-Stop will trigger immediately without confirmation.
+            </p>
+          )}
         </div>
       </div>
 

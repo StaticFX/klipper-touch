@@ -4,10 +4,14 @@ import { TemperatureSection } from "./TemperatureSection";
 import { FanSection } from "./FanSection";
 import { ExtruderSection } from "./ExtruderSection";
 import { BedMeshSection } from "./BedMeshSection";
+import { RetractionSection } from "./RetractionSection";
+import { InputShaperSection } from "./InputShaperSection";
 import { UtilitySection } from "./UtilitySection";
+import { EndstopsSection } from "./EndstopsSection";
+import { BedLevelingSection } from "./BedLevelingSection";
 import { useSubmenu } from "@/hooks/use-submenu";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Move, Thermometer, Fan, Cylinder, Grid3X3, Wrench, Settings } from "lucide-react";
+import { ChevronLeft, ChevronRight, Move, Thermometer, Fan, Cylinder, Grid3X3, Undo2, Activity, Wrench, CircleDot, Ruler, Settings } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type SectionMode = "controls" | "settings";
@@ -26,6 +30,10 @@ const submenus: SubMenu[] = [
   { id: "fan", title: "Fan Control", icon: Fan, component: FanSection, hasSettings: true },
   { id: "extruder", title: "Extruder", icon: Cylinder, component: ExtruderSection, hasSettings: true },
   { id: "bedmesh", title: "Bed Mesh", icon: Grid3X3, component: BedMeshSection, hasSettings: false },
+  { id: "bedlevel", title: "Bed Leveling", icon: Ruler, component: BedLevelingSection, hasSettings: false },
+  { id: "retraction", title: "Retraction / PA", icon: Undo2, component: RetractionSection, hasSettings: false },
+  { id: "shaper", title: "Input Shaper", icon: Activity, component: InputShaperSection, hasSettings: false },
+  { id: "endstops", title: "Endstops", icon: CircleDot, component: EndstopsSection, hasSettings: false },
   { id: "utility", title: "Utilities", icon: Wrench, component: UtilitySection, hasSettings: true },
 ];
 

@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { usePrintStore } from "@/stores/print-store";
+import { usePrinterStore } from "@/stores/printer-store";
 import { getFileMetadata, getThumbnailUrl } from "@/lib/moonraker/client";
 import { Button } from "@/components/ui/button";
-import { Info, Sliders } from "lucide-react";
+import { Info, Sliders, BoxSelect } from "lucide-react";
 import { PrintTab } from "./PrintTab";
 import { DetailsTab } from "./DetailsTab";
 import { AdjustTab } from "./AdjustTab";
+import { ObjectsTab } from "./ObjectsTab";
 
 export function ActivePrint() {
-  const [tab, setTab] = useState<"print" | "details" | "adjust">("print");
+  const [tab, setTab] = useState<"print" | "details" | "adjust" | "objects">("print");
+  const hasObjects = usePrinterStore((s) => s.excludeObject.objects.length > 0);
 
   const stats = usePrintStore((s) => s.print_stats);
   const thumbnailUrl = usePrintStore((s) => s.thumbnailUrl);
@@ -34,6 +37,7 @@ export function ActivePrint() {
         {tab === "print" && <PrintTab filename={stats.filename} thumbnailUrl={thumbnailUrl} />}
         {tab === "details" && <DetailsTab />}
         {tab === "adjust" && <AdjustTab />}
+        {tab === "objects" && <ObjectsTab />}
       </div>
 
       {/* Bottom tabs */}
@@ -41,6 +45,7 @@ export function ActivePrint() {
         <TabBtn active={tab === "print"} label="Print" onTap={() => setTab("print")} />
         <TabBtn active={tab === "details"} icon={<Info size={16} />} label="Details" onTap={() => setTab("details")} />
         <TabBtn active={tab === "adjust"} icon={<Sliders size={16} />} label="Adjust" onTap={() => setTab("adjust")} />
+        {hasObjects && <TabBtn active={tab === "objects"} icon={<BoxSelect size={16} />} label="Objects" onTap={() => setTab("objects")} />}
       </div>
     </div>
   );

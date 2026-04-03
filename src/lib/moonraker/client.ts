@@ -1,5 +1,5 @@
 import { getMoonraker } from "./websocket";
-import type { GcodeFile } from "./types";
+import type { GcodeFile, HistoryJob, HistoryTotals } from "./types";
 
 let baseUrl = "http://localhost:7125";
 
@@ -165,6 +165,11 @@ export async function excludeObject(name: string): Promise<void> {
   await sendGcode(`EXCLUDE_OBJECT NAME=${name}`);
 }
 
+/** Save pending config changes to printer.cfg (Klipper SAVE_CONFIG) */
+export async function saveKlipperConfig(): Promise<void> {
+  await sendGcode("SAVE_CONFIG");
+}
+
 /** Fetch recent gcode response history */
 export interface GcodeStoreEntry {
   message: string;
@@ -178,4 +183,75 @@ export async function getGcodeStore(count = 100): Promise<GcodeStoreEntry[]> {
     { count }
   );
   return result.gcode_store ?? [];
+}
+
+/** Set pressure advance parameters */
+export async function setPressureAdvance(advance: number, smoothTime?: number): Promise<void> {
+  let cmd = `SET_PRESSURE_ADVANCE ADVANCE=${advance.toFixed(4)}`;
+  if (smoothTime !== undefined) cmd += ` SMOOTH_TIME=${smoothTime.toFixed(4)}`;
+  await sendGcode(cmd);
+}
+
+/** Set firmware retraction parameters */
+export async function setRetraction(params: {
+  retract_length?: number;
+  retract_speed?: number;
+  unretract_extra_length?: number;
+  unretract_speed?: number;
+}): Promise<void> {
+  const parts = ["SET_RETRACTION"];
+  if (params.retract_length !== undefined) parts.push(`RETRACT_LENGTH=${params.retract_length.toFixed(3)}`);
+  if (params.retract_speed !== undefined) parts.push(`RETRACT_SPEED=${params.retract_speed.toFixed(0)}`);
+  if (params.unretract_extra_length !== undefined) parts.push(`UNRETRACT_EXTRA_LENGTH=${params.unretract_extra_length.toFixed(3)}`);
+  if (params.unretract_speed !== undefined) parts.push(`UNRETRACT_SPEED=${params.unretract_speed.toFixed(0)}`);
+  await sendGcode(parts.join(" "));
+}
+
+/** Query endstop states — sends QUERY_ENDSTOPS to refresh, then returns the result from the printer object */
+export async function queryEndstops(): Promise<Record<string, unknown>> {
+  await sendGcode("QUERY_ENDSTOPS");
+  const result = await queryObjects({ query_endstops: null });
+  const qs = result.status?.query_endstops as { last_query?: Record<string, unknown> } | undefined;
+  return qs?.last_query ?? {};
+}
+
+/** Set input shaper parameters */
+export async function setInputShaper(params: {
+  shaper_type_x?: string;
+  shaper_type_y?: string;
+  shaper_freq_x?: number;
+  shaper_freq_y?: number;
+}): Promise<void> {
+  const parts = ["SET_INPUT_SHAPER"];
+  if (params.shaper_type_x) parts.push(`SHAPER_TYPE_X=${params.shaper_type_x}`);
+  if (params.shaper_type_y) parts.push(`SHAPER_TYPE_Y=${params.shaper_type_y}`);
+  if (params.shaper_freq_x !== undefined) parts.push(`SHAPER_FREQ_X=${params.shaper_freq_x.toFixed(1)}`);
+  if (params.shaper_freq_y !== undefined) parts.push(`SHAPER_FREQ_Y=${params.shaper_freq_y.toFixed(1)}`);
+  await sendGcode(parts.join(" "));
+}
+
+/** Fetch print history */
+export async function getHistory(limit = 20, start = 0): Promise<{ jobs: HistoryJob[]; count: number }> {
+  return rpc("server.history.list", { limit, start, order: "desc" });
+}
+
+/** Fetch print history totals */
+export async function getHistoryTotals(): Promise<HistoryTotals> {
+  const result = await rpc<{ job_totals: HistoryTotals }>("server.history.totals");
+  return result.job_totals;
+}
+
+/** Delete a history job entry */
+export async function deleteHistoryJob(uid: string): Promise<void> {
+  await rpc("server.history.delete_job", { uid });
+}
+
+/** List files in a root (e.g. "config") */
+export async function listFiles(root: string): Promise<{ path: string; modified: number; size: number }[]> {
+  return rpc("server.files.list", { root });
+}
+
+/** Get raw file content via HTTP */
+export function getFileUrl(root: string, path: string): string {
+  return `${baseUrl}/server/files/${root}/${encodeURIComponent(path)}`;
 }

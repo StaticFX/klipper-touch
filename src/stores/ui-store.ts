@@ -1,7 +1,9 @@
 import { create } from "zustand";
+import { CUSTOM_THEMES, type ThemeVars } from "@/lib/themes";
 
 export type Tab = "dashboard" | "print" | "actions" | "macros" | "settings";
 export type Theme = "light" | "dark";
+export type EstopStyle = "statusbar" | "floating" | "both";
 
 export interface AccentColor {
   name: string;
@@ -28,8 +30,14 @@ interface UiStore {
   toggleTheme: () => void;
   accentHue: number;
   setAccentHue: (hue: number) => void;
+  themePreset: string;
+  setThemePreset: (id: string) => void;
   hiddenSensors: string[];
   toggleSensor: (key: string) => void;
+  estopStyle: EstopStyle;
+  setEstopStyle: (style: EstopStyle) => void;
+  estopConfirm: boolean;
+  setEstopConfirm: (confirm: boolean) => void;
   confirmDialog: ConfirmDialogState | null;
   showConfirm: (state: ConfirmDialogState) => void;
   hideConfirm: () => void;
@@ -50,14 +58,6 @@ function applyTheme(theme: Theme) {
 }
 
 function applyAccentHue(hue: number) {
-  const root = document.documentElement;
-  // Light mode values
-  root.style.setProperty("--primary", `oklch(0.55 0.2 ${hue})`);
-  root.style.setProperty("--ring", `oklch(0.55 0.2 ${hue})`);
-  root.style.setProperty("--chart-1", `oklch(0.55 0.2 ${hue})`);
-  // Dark mode needs separate handling via a CSS class, but since we use
-  // CSS custom properties on :root, we apply the dark variant too.
-  // The .dark selector overrides will be set via a <style> tag.
   const style = document.getElementById("accent-override") ?? (() => {
     const el = document.createElement("style");
     el.id = "accent-override";
@@ -79,6 +79,42 @@ function applyAccentHue(hue: number) {
   localStorage.setItem("klipper-touch-accent-hue", String(hue));
 }
 
+function removeAccentOverride() {
+  document.getElementById("accent-override")?.remove();
+}
+
+function varsToCSS(vars: ThemeVars): string {
+  return Object.entries(vars)
+    .map(([k, v]) => `  --${k}: ${v};`)
+    .join("\n");
+}
+
+function applyThemePreset(id: string) {
+  const existing = document.getElementById("theme-preset-override");
+  if (id === "default") {
+    existing?.remove();
+    return;
+  }
+  const theme = CUSTOM_THEMES.find((t) => t.id === id);
+  if (!theme) return;
+
+  const style = existing ?? (() => {
+    const el = document.createElement("style");
+    el.id = "theme-preset-override";
+    document.head.appendChild(el);
+    return el;
+  })();
+  style.textContent = `
+:root {
+${varsToCSS(theme.light)}
+}
+.dark {
+${varsToCSS(theme.dark)}
+}
+  `;
+  localStorage.setItem("klipper-touch-theme-preset", id);
+}
+
 const savedTheme = (typeof localStorage !== "undefined"
   ? localStorage.getItem("klipper-touch-theme")
   : null) as Theme | null;
@@ -94,10 +130,29 @@ const savedHidden = (typeof localStorage !== "undefined"
   : null);
 const initialHidden: string[] = savedHidden ? JSON.parse(savedHidden) : [];
 
+const savedEstopStyle = (typeof localStorage !== "undefined"
+  ? localStorage.getItem("klipper-touch-estop-style")
+  : null) as EstopStyle | null;
+const initialEstopStyle: EstopStyle = savedEstopStyle || "statusbar";
+
+const savedEstopConfirm = typeof localStorage !== "undefined"
+  ? localStorage.getItem("klipper-touch-estop-confirm")
+  : null;
+const initialEstopConfirm = savedEstopConfirm !== null ? savedEstopConfirm === "true" : true;
+
+const savedPreset = typeof localStorage !== "undefined"
+  ? localStorage.getItem("klipper-touch-theme-preset")
+  : null;
+const initialPreset = savedPreset || "default";
+
 // Apply on load
 if (typeof document !== "undefined") {
   document.documentElement.classList.toggle("dark", initialTheme === "dark");
-  if (initialHue !== 260) applyAccentHue(initialHue);
+  if (initialPreset !== "default") {
+    applyThemePreset(initialPreset);
+  } else if (initialHue !== 260) {
+    applyAccentHue(initialHue);
+  }
 }
 
 export const useUiStore = create<UiStore>((set, get) => ({
@@ -119,6 +174,21 @@ export const useUiStore = create<UiStore>((set, get) => ({
     applyAccentHue(hue);
     set({ accentHue: hue });
   },
+  themePreset: initialPreset,
+  setThemePreset: (id) => {
+    if (id === "default") {
+      // Switching back to default — remove theme override, restore accent hue
+      applyThemePreset("default");
+      localStorage.setItem("klipper-touch-theme-preset", "default");
+      applyAccentHue(get().accentHue);
+    } else {
+      // Custom theme — remove accent override since theme controls all colors
+      removeAccentOverride();
+      applyThemePreset(id);
+      localStorage.setItem("klipper-touch-theme-preset", id);
+    }
+    set({ themePreset: id });
+  },
   hiddenSensors: initialHidden,
   toggleSensor: (key) => {
     const current = get().hiddenSensors;
@@ -127,6 +197,16 @@ export const useUiStore = create<UiStore>((set, get) => ({
       : [...current, key];
     localStorage.setItem("klipper-touch-hidden-sensors", JSON.stringify(next));
     set({ hiddenSensors: next });
+  },
+  estopStyle: initialEstopStyle,
+  setEstopStyle: (style) => {
+    localStorage.setItem("klipper-touch-estop-style", style);
+    set({ estopStyle: style });
+  },
+  estopConfirm: initialEstopConfirm,
+  setEstopConfirm: (confirm) => {
+    localStorage.setItem("klipper-touch-estop-confirm", String(confirm));
+    set({ estopConfirm: confirm });
   },
   confirmDialog: null,
   showConfirm: (state) => set({ confirmDialog: state }),

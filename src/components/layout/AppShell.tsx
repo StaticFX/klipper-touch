@@ -11,6 +11,7 @@ import { MacrosPage } from "@/components/macros/MacrosPage";
 import { SettingsPage } from "@/components/settings/SettingsPage";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { ConnectionOverlay } from "@/components/common/ConnectionOverlay";
+import { FloatingEstop } from "@/components/common/FloatingEstop";
 import { VirtualKeyboard } from "@/components/common/VirtualKeyboard";
 import { ToastContainer } from "@/components/common/ToastContainer";
 
@@ -29,6 +30,8 @@ export function AppShell() {
   const hideConfirm = useUiStore((s) => s.hideConfirm);
   const printMinimized = useUiStore((s) => s.printMinimized);
   const setPrintMinimized = useUiStore((s) => s.setPrintMinimized);
+  const estopStyle = useUiStore((s) => s.estopStyle);
+  const showFloatingEstop = estopStyle === "floating" || estopStyle === "both";
   const printState = usePrintStore((s) => s.print_stats.state);
   const printSummary = usePrintStore((s) => s.printSummary);
   const isPrinting = printState === "printing" || printState === "paused";
@@ -81,6 +84,7 @@ export function AppShell() {
         <ToastContainer />
       </div>
       {showTabBar && <TabBar />}
+      {showFloatingEstop && <FloatingEstop />}
       <ConnectionOverlay />
       {confirmDialog && (
         <ConfirmDialog
