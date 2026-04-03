@@ -42,6 +42,11 @@ export interface UtilityConfig {
   shortcuts: UtilityShortcut[];
 }
 
+export interface BeaconConfig {
+  live_polling_enabled: boolean;
+  poll_interval_ms: number;
+}
+
 export interface AppConfig {
   moonraker_url: string;
   theme: "light" | "dark";
@@ -51,6 +56,7 @@ export interface AppConfig {
   extruder: ExtruderConfig;
   fan: FanConfig;
   utility: UtilityConfig;
+  beacon: BeaconConfig;
 }
 
 export async function getConfig(): Promise<AppConfig> {

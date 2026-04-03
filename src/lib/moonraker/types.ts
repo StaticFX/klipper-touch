@@ -126,6 +126,27 @@ export interface QueryEndstopsStatus {
   last_query: Record<string, unknown>; // e.g. { "x": "open", "y": "open", "z": "TRIGGERED" }
 }
 
+export interface BeaconSample {
+  dist?: number;
+  distance?: number;
+  z?: number;
+  temp?: number;
+  freq?: number;
+  frequency?: number;
+  value?: number;
+  pos?: [number, number, number];
+  time?: number;
+  vel?: number;
+  [key: string]: unknown;
+}
+
+export interface BeaconStatus {
+  last_z_result: number | null;
+  last_sample: BeaconSample | null;
+  model: string | null;
+  models: Record<string, unknown>;
+}
+
 export interface HistoryJob {
   job_id: string;
   exists: boolean;

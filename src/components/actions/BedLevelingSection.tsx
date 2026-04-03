@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePrinterStore } from "@/stores/printer-store";
 import { useGcode } from "@/hooks/use-gcode";
+import { useBeaconLive } from "@/hooks/use-beacon-live";
 import { queryObjects } from "@/lib/moonraker/client";
 import { NumericKeypad } from "@/components/common/NumericKeypad";
 import { Button } from "@/components/ui/button";
@@ -162,6 +163,7 @@ export function BedLevelingSection({ mode: _mode }: { mode: SectionMode }) {
   const homedAxes = usePrinterStore((s) => s.toolhead.homed_axes);
   const connected = usePrinterStore((s) => s.klippyState) === "ready";
   const allHomed = homedAxes.includes("x") && homedAxes.includes("y") && homedAxes.includes("z");
+  const beaconDist = useBeaconLive();
 
   const [limits, setLimits] = useState<BedLimits>(DEFAULT_LIMITS);
   const [limitsLoaded, setLimitsLoaded] = useState(false);
@@ -210,8 +212,11 @@ export function BedLevelingSection({ mode: _mode }: { mode: SectionMode }) {
     const p = getPoints(limits, inset, pointCount, rotation)[index];
     if (!p) return;
     setActivePoint(index);
+    // Relative Z raise, then absolute XY travel + Z lower
     send([
+      `G91`,
       `G1 Z${Z_HOP} F${Z_SPEED}`,
+      `G90`,
       `G1 X${p.x.toFixed(1)} Y${p.y.toFixed(1)} F${TRAVEL_SPEED}`,
       `G1 Z${Z_PROBE} F${Z_SPEED}`,
     ].join("\n"));
@@ -221,7 +226,9 @@ export function BedLevelingSection({ mode: _mode }: { mode: SectionMode }) {
     const pts = getPoints(limits, inset, pointCount, rotation);
     const commands = ["G28"];
     for (const p of pts) {
+      commands.push(`G91`);
       commands.push(`G1 Z${Z_HOP} F${Z_SPEED}`);
+      commands.push(`G90`);
       commands.push(`G1 X${p.x.toFixed(1)} Y${p.y.toFixed(1)} F${TRAVEL_SPEED}`);
       commands.push(`G1 Z${Z_PROBE} F${Z_SPEED}`);
     }
@@ -265,6 +272,19 @@ export function BedLevelingSection({ mode: _mode }: { mode: SectionMode }) {
         </div>
       </Card>
 
+      {/* Beacon live Z */}
+      {beaconDist != null && (
+        <div className="rounded-lg border border-primary/30 px-3 py-2 bg-card flex items-center justify-between">
+          <div>
+            <div className="text-[10px] text-muted-foreground">Beacon Z Distance</div>
+            <div className="text-lg font-bold tabular-nums">{beaconDist.toFixed(3)} mm</div>
+          </div>
+          {activePoint != null && (
+            <div className="text-xs text-muted-foreground">Point {activePoint + 1}</div>
+          )}
+        </div>
+      )}
+
       {/* Point count toggle + inset */}
       <Card>
         <div className="flex items-center justify-between mb-2">
@@ -292,22 +312,21 @@ export function BedLevelingSection({ mode: _mode }: { mode: SectionMode }) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-muted-foreground">Edge inset</span>
-          <button
-            className="text-sm font-bold tabular-nums active:text-primary transition-colors"
-            onClick={() => setKeypad({
-              title: "Edge Inset",
-              value: inset,
-              min: 5,
-              max: Math.min(limits.maxX, limits.maxY) / 2 - 5,
-              unit: "mm",
-              onSubmit: (v) => { setInset(v); setKeypad(null); },
-            })}
-          >
-            {inset} mm
-          </button>
-        </div>
+        <Button
+          variant="outline"
+          className="w-full h-10 justify-between px-3 mb-3"
+          onClick={() => setKeypad({
+            title: "Edge Inset",
+            value: inset,
+            min: 5,
+            max: Math.min(limits.maxX, limits.maxY) / 2 - 5,
+            unit: "mm",
+            onSubmit: (v) => { setInset(v); setKeypad(null); },
+          })}
+        >
+          <span className="text-xs text-muted-foreground">Edge Inset</span>
+          <span className="text-sm font-semibold tabular-nums">{inset} mm</span>
+        </Button>
 
         {/* Visual bed diagram */}
         <BedDiagram

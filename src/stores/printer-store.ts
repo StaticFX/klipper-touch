@@ -9,6 +9,7 @@ import type {
   FirmwareRetractionStatus,
   InputShaperStatus,
   QueryEndstopsStatus,
+  BeaconStatus,
 } from "@/lib/moonraker/types";
 
 export interface TemperatureSample {
@@ -58,6 +59,7 @@ interface PrinterStore extends ConnectionState {
   firmwareRetraction: FirmwareRetractionStatus | null;
   inputShaper: InputShaperStatus | null;
   queryEndstops: QueryEndstopsStatus | null;
+  beacon: BeaconStatus | null;
   bedMesh: BedMeshData | null;
   configPending: ConfigPendingState;
   temperatureHistory: TemperatureSample[];
@@ -116,6 +118,7 @@ export const usePrinterStore = create<PrinterStore>((set, get) => ({
   firmwareRetraction: null,
   inputShaper: null,
   queryEndstops: null,
+  beacon: null,
   bedMesh: null,
   configPending: { pending: false, items: {} },
   temperatureHistory: [],
@@ -174,6 +177,12 @@ export const usePrinterStore = create<PrinterStore>((set, get) => ({
       updates.queryEndstops = { ...current, ...(data.query_endstops as Partial<QueryEndstopsStatus>) } as QueryEndstopsStatus;
     }
 
+    // Handle beacon
+    if (data.beacon) {
+      const current = get().beacon;
+      updates.beacon = { ...current, ...(data.beacon as Partial<BeaconStatus>) } as BeaconStatus;
+    }
+
     // Handle bed mesh
     if (data.bed_mesh) {
       const mesh = data.bed_mesh as Partial<BedMeshData>;
@@ -185,17 +194,47 @@ export const usePrinterStore = create<PrinterStore>((set, get) => ({
       }
     }
 
-    // Handle configfile (save_config pending)
+    // Handle configfile (save_config pending + settings)
     if (data.configfile) {
       const cf = data.configfile as Partial<{
         save_config_pending: boolean;
         save_config_pending_items: Record<string, Record<string, string>>;
+        settings: Record<string, Record<string, unknown>>;
       }>;
       const current = get().configPending;
       updates.configPending = {
         pending: cf.save_config_pending ?? current.pending,
         items: cf.save_config_pending_items ?? current.items,
       };
+
+      // Extract input_shaper config from settings
+      const isSettings = cf.settings?.input_shaper as Record<string, unknown> | undefined;
+      if (isSettings) {
+        const currentIS = get().inputShaper;
+        updates.inputShaper = {
+          shaper_type_x: (isSettings.shaper_type_x as string) ?? currentIS?.shaper_type_x ?? "mzv",
+          shaper_type_y: (isSettings.shaper_type_y as string) ?? currentIS?.shaper_type_y ?? "mzv",
+          shaper_freq_x: (isSettings.shaper_freq_x as number) ?? currentIS?.shaper_freq_x ?? 0,
+          shaper_freq_y: (isSettings.shaper_freq_y as number) ?? currentIS?.shaper_freq_y ?? 0,
+          damping_ratio_x: (isSettings.damping_ratio_x as number) ?? currentIS?.damping_ratio_x ?? 0.1,
+          damping_ratio_y: (isSettings.damping_ratio_y as number) ?? currentIS?.damping_ratio_y ?? 0.1,
+        };
+      }
+
+      // Also check save_config_pending_items for unsaved input_shaper changes
+      const pendingIS = cf.save_config_pending_items?.input_shaper;
+      if (pendingIS) {
+        const currentIS = updates.inputShaper ?? get().inputShaper;
+        if (currentIS) {
+          updates.inputShaper = {
+            ...currentIS,
+            ...(pendingIS.shaper_type_x !== undefined ? { shaper_type_x: pendingIS.shaper_type_x } : {}),
+            ...(pendingIS.shaper_type_y !== undefined ? { shaper_type_y: pendingIS.shaper_type_y } : {}),
+            ...(pendingIS.shaper_freq_x !== undefined ? { shaper_freq_x: parseFloat(pendingIS.shaper_freq_x) } : {}),
+            ...(pendingIS.shaper_freq_y !== undefined ? { shaper_freq_y: parseFloat(pendingIS.shaper_freq_y) } : {}),
+          };
+        }
+      }
     }
 
     // Handle fan objects and extra temp sensors

@@ -1,4 +1,5 @@
 import { getMoonraker } from "./websocket";
+import { invoke } from "@tauri-apps/api/core";
 import type { GcodeFile, HistoryJob, HistoryTotals } from "./types";
 
 let baseUrl = "http://localhost:7125";
@@ -246,6 +247,36 @@ export async function deleteHistoryJob(uid: string): Promise<void> {
   await rpc("server.history.delete_job", { uid });
 }
 
+/** Beacon probe commands */
+export async function beaconCalibrate(): Promise<void> {
+  await sendGcode("BEACON_CALIBRATE");
+}
+
+export async function beaconEstimateBacklash(): Promise<void> {
+  await sendGcode("BEACON_ESTIMATE_BACKLASH");
+}
+
+export async function beaconOffsetCompare(): Promise<void> {
+  await sendGcode("BEACON_OFFSET_COMPARE");
+}
+
+export async function beaconApplyZOffset(): Promise<void> {
+  await sendGcode("Z_OFFSET_APPLY_PROBE");
+}
+
+export async function beaconModelSelect(name: string): Promise<void> {
+  await sendGcode(`BEACON_MODEL_SELECT NAME=${name}`);
+}
+
+export async function beaconModelSave(name?: string): Promise<void> {
+  await sendGcode(name ? `BEACON_MODEL_SAVE NAME=${name}` : "BEACON_MODEL_SAVE");
+}
+
+export async function queryBeacon(): Promise<void> {
+  // The websocket automatically pushes status data from query responses to the store
+  await queryObjects({ beacon: null });
+}
+
 /** List files in a root (e.g. "config") */
 export async function listFiles(root: string): Promise<{ path: string; modified: number; size: number }[]> {
   return rpc("server.files.list", { root });
@@ -254,4 +285,37 @@ export async function listFiles(root: string): Promise<{ path: string; modified:
 /** Get raw file content via HTTP */
 export function getFileUrl(root: string, path: string): string {
   return `${baseUrl}/server/files/${root}/${encodeURIComponent(path)}`;
+}
+
+/**
+ * Save input shaper settings to printer.cfg via Moonraker's file API.
+ * Flow: download printer.cfg → modify [input_shaper] section → upload → RESTART.
+ */
+export async function saveInputShaperToConfig(params: {
+  shaper_type_x?: string;
+  shaper_type_y?: string;
+  shaper_freq_x?: number;
+  shaper_freq_y?: number;
+}): Promise<void> {
+  const values: Record<string, string> = {};
+  if (params.shaper_type_x) values.shaper_type_x = params.shaper_type_x;
+  if (params.shaper_type_y) values.shaper_type_y = params.shaper_type_y;
+  if (params.shaper_freq_x !== undefined) values.shaper_freq_x = params.shaper_freq_x.toFixed(1);
+  if (params.shaper_freq_y !== undefined) values.shaper_freq_y = params.shaper_freq_y.toFixed(1);
+
+  // 1. Download current printer.cfg
+  const content = await invoke<string>("fetch_printer_config", { moonrakerUrl: baseUrl });
+
+  // 2. Modify [input_shaper] in the #*# SAVE_CONFIG override block
+  const modified = await invoke<string>("update_config_override", {
+    content,
+    section: "input_shaper",
+    values,
+  });
+
+  // 3. Upload modified printer.cfg
+  await invoke<void>("upload_printer_config", { moonrakerUrl: baseUrl, content: modified });
+
+  // 4. Restart firmware to apply
+  await sendGcode("RESTART");
 }

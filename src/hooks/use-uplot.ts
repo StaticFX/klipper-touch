@@ -42,14 +42,30 @@ export function useUPlot() {
   hiddenRef.current = hiddenSensors;
   const [legendKeys, setLegendKeys] = useState<string[]>(["extruder", "bed"]);
 
+  const themePreset = useUiStore((s) => s.themePreset);
+
   const createPlot = useCallback((width: number, height: number, sensors: string[]) => {
     if (!containerRef.current) return;
     plotRef.current?.destroy();
 
     const isDark = theme === "dark";
-    const axisStroke = isDark ? "#555" : "#999";
-    const gridStroke = isDark ? "#222" : "#e5e7eb";
-    const tickStroke = isDark ? "#333" : "#d1d5db";
+    const styles = getComputedStyle(document.documentElement);
+    const fg = styles.getPropertyValue("--foreground").trim();
+    const border = styles.getPropertyValue("--border").trim();
+
+    let axisStroke: string, gridStroke: string, tickStroke: string;
+    if (fg && border) {
+      axisStroke = `color-mix(in srgb, ${fg} 40%, transparent)`;
+      gridStroke = border;
+      tickStroke = `color-mix(in srgb, ${fg} 25%, transparent)`;
+    } else {
+      axisStroke = isDark ? "#555" : "#999";
+      gridStroke = isDark ? "#222" : "#e5e7eb";
+      tickStroke = isDark ? "#333" : "#d1d5db";
+    }
+
+    const bodyFont = styles.getPropertyValue("font-family") || getComputedStyle(document.body).fontFamily;
+    const axisFont = `10px ${bodyFont || "system-ui"}`;
 
     const series: uPlot.Series[] = [{}];
     for (let i = 0; i < sensors.length; i++) {
@@ -81,7 +97,7 @@ export function useUPlot() {
           stroke: axisStroke,
           grid: { stroke: gridStroke, width: 1 },
           ticks: { stroke: tickStroke, width: 1 },
-          font: "10px system-ui",
+          font: axisFont,
           values: (_u: uPlot, vals: number[]) =>
             vals.map((v) => {
               const d = new Date(v * 1000);
@@ -92,7 +108,7 @@ export function useUPlot() {
           stroke: axisStroke,
           grid: { stroke: gridStroke, width: 1 },
           ticks: { stroke: tickStroke, width: 1 },
-          font: "10px system-ui",
+          font: axisFont,
           values: (_u: uPlot, vals: number[]) => vals.map((v) => `${v}°`),
         },
       ],
@@ -102,7 +118,7 @@ export function useUPlot() {
     const emptyData: uPlot.AlignedData = [[], ...sensors.map(() => [] as number[])];
     plotRef.current = new uPlot(opts, emptyData, containerRef.current);
     sensorsRef.current = sensors;
-  }, [theme]);
+  }, [theme, themePreset]);
 
   // Discover sensors and create/recreate plot + resize observer
   useEffect(() => {

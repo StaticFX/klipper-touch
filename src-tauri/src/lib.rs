@@ -11,12 +11,17 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::config::get_config,
             commands::config::save_config,
+            commands::config::read_text_file,
+            commands::config::list_local_files,
             commands::network::get_network_info,
             commands::network::scan_wifi,
             commands::network::connect_wifi,
             commands::network::forget_wifi,
             commands::network::list_saved_wifi,
             commands::update::perform_update,
+            commands::moonraker::fetch_printer_config,
+            commands::moonraker::upload_printer_config,
+            commands::moonraker::update_config_override,
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();

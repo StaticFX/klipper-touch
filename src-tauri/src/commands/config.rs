@@ -245,6 +245,28 @@ fn writable_config_path() -> PathBuf {
 }
 
 #[tauri::command]
+pub fn read_text_file(path: String) -> Result<String, String> {
+    fs::read_to_string(&path).map_err(|e| format!("Failed to read {path}: {e}"))
+}
+
+/// List files in a directory matching a prefix and suffix.
+/// If dir is empty, uses the project root (dev) or /tmp (prod).
+#[tauri::command]
+pub fn list_local_files(dir: String, prefix: String, suffix: String) -> Result<Vec<String>, String> {
+    let entries = fs::read_dir(&dir).map_err(|e| format!("Failed to read dir {dir}: {e}"))?;
+    let mut results = Vec::new();
+    for entry in entries.flatten() {
+        if let Some(name) = entry.file_name().to_str() {
+            if name.starts_with(&prefix) && name.ends_with(&suffix) {
+                results.push(entry.path().to_string_lossy().to_string());
+            }
+        }
+    }
+    results.sort();
+    Ok(results)
+}
+
+#[tauri::command]
 pub fn save_config(config: AppConfig) -> Result<(), String> {
     let path = writable_config_path();
 

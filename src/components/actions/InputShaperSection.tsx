@@ -1,16 +1,13 @@
-import { useState, useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { usePrinterStore } from "@/stores/printer-store";
 import { useUiStore } from "@/stores/ui-store";
 import { useGcode } from "@/hooks/use-gcode";
-import { setInputShaper } from "@/lib/moonraker/client";
-import { NumericKeypad } from "@/components/common/NumericKeypad";
+import { sendGcode, saveInputShaperToConfig } from "@/lib/moonraker/client";
+import { useToastStore } from "@/stores/toast-store";
 import { ShaperGraph } from "./ShaperGraph";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Play, WifiOff } from "lucide-react";
+import { Play, Search, WifiOff } from "lucide-react";
 import type { SectionMode } from "./ActionsPage";
-
-const SHAPER_TYPES = ["zv", "mzv", "zvd", "ei", "2hump_ei", "3hump_ei"];
 
 const DEFAULT_SHAPER = {
   shaper_type_x: "mzv",
@@ -26,17 +23,19 @@ export function InputShaperSection({ mode: _mode }: { mode: SectionMode }) {
   const connected = usePrinterStore((s) => s.klippyState) === "ready";
   const showConfirm = useUiStore((s) => s.showConfirm);
   const { send, busy } = useGcode();
+  const addToast = useToastStore((s) => s.addToast);
+
+  // Query current input shaper values on mount (like KlipperScreen's activate())
+  // SET_INPUT_SHAPER with no params returns current values via gcode response
+  useEffect(() => {
+    if (connected) {
+      sendGcode("SET_INPUT_SHAPER").catch(() => {});
+    }
+  }, [connected]);
 
   // Merge live data with defaults so missing fields don't crash
   const shaper = { ...DEFAULT_SHAPER, ...liveShaper };
   const isLive = liveShaper !== null;
-
-  const [localFreqX, setLocalFreqX] = useState<number | null>(null);
-  const [localFreqY, setLocalFreqY] = useState<number | null>(null);
-  const [keypad, setKeypad] = useState<{
-    title: string; value: number; min: number; max: number; unit: string;
-    onSubmit: (v: number) => void;
-  } | null>(null);
 
   const runCalibration = useCallback((axis: "x" | "y" | "both") => {
     const cmd = axis === "both" ? "SHAPER_CALIBRATE" : `SHAPER_CALIBRATE AXIS=${axis}`;
@@ -46,9 +45,6 @@ export function InputShaperSection({ mode: _mode }: { mode: SectionMode }) {
       onConfirm: () => send(cmd),
     });
   }, [showConfirm, send]);
-
-  const freqX = localFreqX ?? shaper.shaper_freq_x;
-  const freqY = localFreqY ?? shaper.shaper_freq_y;
 
   return (
     <div className="space-y-3">
@@ -76,97 +72,50 @@ export function InputShaperSection({ mode: _mode }: { mode: SectionMode }) {
       </Card>
 
       {/* Resonance graphs */}
-      <ShaperGraph axis="x" shaperFreq={shaper.shaper_freq_x} />
-      <ShaperGraph axis="y" shaperFreq={shaper.shaper_freq_y} />
+      <ShaperGraph
+        axis="x"
+        shaperFreq={shaper.shaper_freq_x}
+        onApplyShaper={(type, freq) => {
+          showConfirm({
+            title: "Apply & Save Input Shaper",
+            message: `Set X axis to ${type.toUpperCase()} @ ${freq.toFixed(1)} Hz?\n\nThis will save to printer.cfg and restart the firmware.`,
+            onConfirm: async () => {
+              try {
+                await saveInputShaperToConfig({ shaper_type_x: type, shaper_freq_x: freq });
+                addToast(`X shaper set to ${type.toUpperCase()} @ ${freq.toFixed(1)} Hz — saved & restarting`, "info");
+              } catch (err) {
+                addToast(err instanceof Error ? err.message : String(err), "error");
+              }
+            },
+          });
+        }}
+      />
+      <ShaperGraph
+        axis="y"
+        shaperFreq={shaper.shaper_freq_y}
+        onApplyShaper={(type, freq) => {
+          showConfirm({
+            title: "Apply & Save Input Shaper",
+            message: `Set Y axis to ${type.toUpperCase()} @ ${freq.toFixed(1)} Hz?\n\nThis will save to printer.cfg and restart the firmware.`,
+            onConfirm: async () => {
+              try {
+                await saveInputShaperToConfig({ shaper_type_y: type, shaper_freq_y: freq });
+                addToast(`Y shaper set to ${type.toUpperCase()} @ ${freq.toFixed(1)} Hz — saved & restarting`, "info");
+              } catch (err) {
+                addToast(err instanceof Error ? err.message : String(err), "error");
+              }
+            },
+          });
+        }}
+      />
 
-      {/* X axis */}
+      {/* Accelerometer */}
       <Card>
-        <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">X Axis</div>
-        <div className="mb-3">
-          <div className="text-xs text-muted-foreground mb-1.5">Shaper Type</div>
-          <div className="flex flex-wrap gap-1">
-            {SHAPER_TYPES.map((t) => (
-              <Button
-                key={t}
-                variant={shaper.shaper_type_x === t ? "default" : "secondary"}
-                size="xs"
-                disabled={!connected}
-                onClick={() => setInputShaper({ shaper_type_x: t })}
-              >
-                {t.toUpperCase()}
-              </Button>
-            ))}
-          </div>
-        </div>
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-muted-foreground">Frequency</span>
-          <button
-            className="text-sm font-bold tabular-nums active:text-primary transition-colors"
-            disabled={!connected}
-            onClick={() => setKeypad({
-              title: "X Shaper Frequency", value: shaper.shaper_freq_x, min: 1, max: 150, unit: "Hz",
-              onSubmit: (v) => { setInputShaper({ shaper_freq_x: v }); setKeypad(null); },
-            })}
-          >
-            {freqX > 0 ? `${freqX.toFixed(1)} Hz` : "— Hz"}
-          </button>
-        </div>
-        <Slider
-          min={10} max={100} step={0.5}
-          value={[freqX || 40]}
-          disabled={!connected}
-          onValueChange={([v]) => setLocalFreqX(v)}
-          onValueCommit={([v]) => { setLocalFreqX(null); setInputShaper({ shaper_freq_x: v }); }}
-        />
-      </Card>
-
-      {/* Y axis */}
-      <Card>
-        <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Y Axis</div>
-        <div className="mb-3">
-          <div className="text-xs text-muted-foreground mb-1.5">Shaper Type</div>
-          <div className="flex flex-wrap gap-1">
-            {SHAPER_TYPES.map((t) => (
-              <Button
-                key={t}
-                variant={shaper.shaper_type_y === t ? "default" : "secondary"}
-                size="xs"
-                disabled={!connected}
-                onClick={() => setInputShaper({ shaper_type_y: t })}
-              >
-                {t.toUpperCase()}
-              </Button>
-            ))}
-          </div>
-        </div>
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-muted-foreground">Frequency</span>
-          <button
-            className="text-sm font-bold tabular-nums active:text-primary transition-colors"
-            disabled={!connected}
-            onClick={() => setKeypad({
-              title: "Y Shaper Frequency", value: shaper.shaper_freq_y, min: 1, max: 150, unit: "Hz",
-              onSubmit: (v) => { setInputShaper({ shaper_freq_y: v }); setKeypad(null); },
-            })}
-          >
-            {freqY > 0 ? `${freqY.toFixed(1)} Hz` : "— Hz"}
-          </button>
-        </div>
-        <Slider
-          min={10} max={100} step={0.5}
-          value={[freqY || 40]}
-          disabled={!connected}
-          onValueChange={([v]) => setLocalFreqY(v)}
-          onValueCommit={([v]) => { setLocalFreqY(null); setInputShaper({ shaper_freq_y: v }); }}
-        />
-      </Card>
-
-      {/* Calibration */}
-      <Card>
+        <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Accelerometer</div>
+        <Button variant="outline" className="w-full mb-3" disabled={busy || !connected} onClick={() => send("ACCELEROMETER_QUERY")}>
+          <Search size={14} /> Query Accelerometer
+        </Button>
         <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Auto-Calibrate</div>
-        <p className="text-[11px] text-muted-foreground mb-3">
-          Requires an ADXL345 accelerometer connected to the printer.
-        </p>
         <div className="grid grid-cols-3 gap-1.5">
           <Button variant="outline" disabled={busy || !connected} onClick={() => runCalibration("x")}>
             <Play size={14} /> X Axis
@@ -180,22 +129,6 @@ export function InputShaperSection({ mode: _mode }: { mode: SectionMode }) {
         </div>
       </Card>
 
-      <p className="text-[11px] text-muted-foreground text-center">
-        Changes apply immediately. Use SAVE_CONFIG to make permanent.
-      </p>
-
-      {keypad && (
-        <NumericKeypad
-          title={keypad.title}
-          initialValue={keypad.value}
-          unit={keypad.unit}
-          min={keypad.min}
-          max={keypad.max}
-          allowDecimal={true}
-          onSubmit={keypad.onSubmit}
-          onCancel={() => setKeypad(null)}
-        />
-      )}
     </div>
   );
 }

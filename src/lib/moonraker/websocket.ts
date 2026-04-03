@@ -17,7 +17,7 @@ const SUBSCRIBED_OBJECTS: Record<string, string[] | null> = {
   heater_bed: null,
   fan: null,
   bed_mesh: null,
-  configfile: ["save_config_pending", "save_config_pending_items"],
+  configfile: ["save_config_pending", "save_config_pending_items", "settings"],
   print_stats: null,
   exclude_object: null,
   toolhead: ["position", "homed_axes", "max_velocity", "max_accel", "minimum_cruise_ratio", "square_corner_velocity"],
@@ -44,7 +44,7 @@ function isTempSensor(name: string): boolean {
 }
 
 // Objects to subscribe to only if they exist on the printer
-const OPTIONAL_OBJECTS = ["firmware_retraction", "input_shaper", "query_endstops"];
+const OPTIONAL_OBJECTS = ["firmware_retraction", "input_shaper", "query_endstops", "beacon"];
 
 // Singleton so the rest of the app can call moonraker.call()
 let instance: MoonrakerWebSocket | null = null;
@@ -232,10 +232,10 @@ export class MoonrakerWebSocket {
         } else {
           pending.resolve(msg.result);
         }
-        return;
+        // Fall through to also push status data to store
       }
 
-      // Non-pending responses with status data
+      // Push status data to store (for both pending and non-pending responses)
       if (msg.result && typeof msg.result === "object") {
         const result = msg.result as { status?: Record<string, unknown> };
         if (result.status) {

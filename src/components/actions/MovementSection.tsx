@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useGcode } from "@/hooks/use-gcode";
+import { useBeaconLive } from "@/hooks/use-beacon-live";
 import { usePrinterStore } from "@/stores/printer-store";
 import { useMovementStore } from "@/stores/movement-store";
 import { NumericKeypad } from "@/components/common/NumericKeypad";
@@ -107,6 +108,8 @@ export function MovementSection({ mode }: { mode: SectionMode }) {
 
   const pos = usePrinterStore((s) => s.toolhead.position);
   const homedAxes = usePrinterStore((s) => s.toolhead.homed_axes);
+  const beaconDist = useBeaconLive();
+
   const xHomed = homedAxes.includes("x");
   const yHomed = homedAxes.includes("y");
   const zHomed = homedAxes.includes("z");
@@ -138,7 +141,7 @@ export function MovementSection({ mode }: { mode: SectionMode }) {
   return (
     <div className="space-y-3 landscape:space-y-4">
       {/* Position readout */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className={`grid gap-2 ${beaconDist != null ? "grid-cols-4" : "grid-cols-3"}`}>
         {(["X", "Y", "Z"] as const).map((axis, i) => {
           const homed = homedAxes.includes(axis.toLowerCase());
           return (
@@ -150,6 +153,12 @@ export function MovementSection({ mode }: { mode: SectionMode }) {
             </div>
           );
         })}
+        {beaconDist != null && (
+          <div className="rounded-lg border border-primary/30 px-3 py-1.5 landscape:py-2 bg-card">
+            <div className="text-[10px] text-muted-foreground">Probe</div>
+            <div className="text-sm font-semibold tabular-nums">{beaconDist.toFixed(3)}</div>
+          </div>
+        )}
       </div>
 
       {/* Step size — above jog pad in portrait, beside in landscape */}

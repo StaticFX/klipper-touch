@@ -292,6 +292,32 @@ function drawMesh(
     );
   }
 
+  // ── Bed origin marker ──
+  const xRange = meta.meshMax[0] - meta.meshMin[0];
+  const yRange = meta.meshMax[1] - meta.meshMin[1];
+  if (xRange > 0 && yRange > 0) {
+    const ox = -meta.meshMin[0] / xRange;
+    const oy = -meta.meshMin[1] / yRange;
+    if (ox >= -0.05 && ox <= 1.05 && oy >= -0.05 && oy <= 1.05) {
+      const oProj = project(
+        Math.max(0, Math.min(1, ox)),
+        Math.max(0, Math.min(1, oy)),
+        floorZ,
+      );
+      const r = Math.max(3, Math.min(5, w * 0.008));
+      ctx.beginPath();
+      ctx.arc(oProj.x, oProj.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = dark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.7)";
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(oProj.x, oProj.y, r + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = dark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      labelWithBg("0,0", oProj.x, oProj.y - r - 6, "center", "bottom");
+    }
+  }
+
   // ── Scale indicator ──
   ctx.fillStyle = labelColor;
   ctx.font = `${Math.max(9, Math.min(11, w * 0.016))}px ui-monospace, monospace`;

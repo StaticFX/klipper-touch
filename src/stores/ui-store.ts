@@ -91,6 +91,10 @@ function varsToCSS(vars: ThemeVars): string {
 
 function applyThemePreset(id: string) {
   const existing = document.getElementById("theme-preset-override");
+  // Toggle theme-specific classes
+  document.documentElement.classList.toggle("glass-active", id === "glass");
+  document.documentElement.classList.toggle("terminal-active", id === "terminal");
+
   if (id === "default") {
     existing?.remove();
     return;

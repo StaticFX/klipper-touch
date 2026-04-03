@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { AppShell } from "@/components/layout/AppShell";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { useMoonraker } from "@/hooks/use-moonraker";
 
 export default function App() {
@@ -10,5 +11,9 @@ export default function App() {
     getCurrentWindow().show();
   }, []);
 
-  return <AppShell />;
+  return (
+    <ErrorBoundary>
+      <AppShell />
+    </ErrorBoundary>
+  );
 }

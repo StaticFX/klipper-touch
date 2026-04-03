@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MovementSection } from "./MovementSection";
 import { TemperatureSection } from "./TemperatureSection";
 import { FanSection } from "./FanSection";
@@ -9,9 +9,11 @@ import { InputShaperSection } from "./InputShaperSection";
 import { UtilitySection } from "./UtilitySection";
 import { EndstopsSection } from "./EndstopsSection";
 import { BedLevelingSection } from "./BedLevelingSection";
+import { BeaconSection } from "./BeaconSection";
 import { useSubmenu } from "@/hooks/use-submenu";
+import { usePrinterStore } from "@/stores/printer-store";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Move, Thermometer, Fan, Cylinder, Grid3X3, Undo2, Activity, Wrench, CircleDot, Ruler, Settings } from "lucide-react";
+import { ChevronLeft, ChevronRight, Move, Thermometer, Fan, Cylinder, Grid3X3, Undo2, Activity, Wrench, CircleDot, Ruler, Settings, Radar } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type SectionMode = "controls" | "settings";
@@ -40,8 +42,17 @@ const submenus: SubMenu[] = [
 export function ActionsPage() {
   const { active, setActive, goBack } = useSubmenu();
   const [mode, setMode] = useState<SectionMode>("controls");
+  const beacon = usePrinterStore((s) => s.beacon);
 
-  const current = submenus.find((s) => s.id === active);
+  const allMenus = useMemo(() => {
+    const menus = [...submenus];
+    if (beacon) {
+      menus.push({ id: "beacon", title: "Beacon Probe", icon: Radar, component: BeaconSection, hasSettings: true });
+    }
+    return menus;
+  }, [beacon]);
+
+  const current = allMenus.find((s) => s.id === active);
 
   if (current) {
     const Component = current.component;
@@ -83,7 +94,7 @@ export function ActionsPage() {
 
   return (
     <div className="flex flex-col">
-      {submenus.map((item) => {
+      {allMenus.map((item) => {
         const Icon = item.icon;
         return (
           <Button

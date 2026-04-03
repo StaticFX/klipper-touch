@@ -1,4 +1,5 @@
 @import "tailwindcss";
+/* Fonts (Inter, Geist, VT323) loaded via <link> in index.html */
 
 @custom-variant dark (&:is(.dark *));
 
@@ -158,6 +159,238 @@ body {
 #root {
   width: 100%;
   height: 100%;
+}
+
+/* ── Glass theme ───────────────────────────────────────────────── */
+
+/* Font: Geist Sans (glass-ui default — imported at top of file) */
+.glass-active body {
+  font-family: "Geist", system-ui, -apple-system, sans-serif;
+}
+
+/* Font: VT323 (terminal theme — imported at top of file) */
+.terminal-active body {
+  font-family: "VT323", ui-monospace, monospace;
+  letter-spacing: 0.02em;
+}
+
+/* Warm blurred wallpaper — muted earthy blobs */
+.glass-active body {
+  background:
+    radial-gradient(ellipse at 20% 60%, hsla(80, 25%, 72%, 0.5) 0%, transparent 50%),
+    radial-gradient(ellipse at 75% 25%, hsla(30, 30%, 70%, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 90%, hsla(320, 15%, 65%, 0.3) 0%, transparent 50%),
+    linear-gradient(160deg, #e0ddd5 0%, #d8dbd0 35%, #ddd5d8 65%, #d5d8dd 100%);
+}
+
+.glass-active.dark body {
+  background:
+    radial-gradient(ellipse at 20% 60%, hsla(80, 30%, 18%, 0.7) 0%, transparent 50%),
+    radial-gradient(ellipse at 75% 25%, hsla(30, 35%, 16%, 0.6) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 90%, hsla(320, 20%, 14%, 0.5) 0%, transparent 50%),
+    linear-gradient(160deg, #1a1916 0%, #181a15 35%, #1a1618 65%, #16181a 100%);
+}
+
+/* ── Standard glass panel (cards, stat boxes) ─────────────────── */
+.glass-active .bg-card,
+.glass-active .bg-muted\/50 {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.12) 25%,
+    rgba(240, 248, 255, 0.13) 50%,
+    rgba(255, 255, 255, 0.11) 75%,
+    rgba(230, 240, 255, 0.12) 100%
+  );
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 1px 4px rgba(0, 0, 0, 0.04),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.08),
+    inset 0 0 12px rgba(255, 255, 255, 0.1);
+}
+
+.glass-active.dark .bg-card,
+.glass-active.dark .bg-muted\/50 {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.06) 25%,
+    rgba(240, 248, 255, 0.07) 50%,
+    rgba(255, 255, 255, 0.05) 75%,
+    rgba(230, 240, 255, 0.06) 100%
+  );
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 1px 4px rgba(0, 0, 0, 0.15),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.12),
+    inset 0 0 12px rgba(255, 255, 255, 0.15);
+}
+
+/* ── Frosted glass (tab bar, navigation) ──────────────────────── */
+.glass-active .bg-background {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.22) 25%,
+    rgba(240, 248, 255, 0.23) 50%,
+    rgba(255, 255, 255, 0.21) 75%,
+    rgba(230, 240, 255, 0.22) 100%
+  );
+  backdrop-filter: blur(25px) saturate(200%);
+  -webkit-backdrop-filter: blur(25px) saturate(200%);
+}
+
+.glass-active.dark .bg-background {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.12) 25%,
+    rgba(240, 248, 255, 0.13) 50%,
+    rgba(255, 255, 255, 0.11) 75%,
+    rgba(230, 240, 255, 0.12) 100%
+  );
+  backdrop-filter: blur(25px) saturate(200%);
+  -webkit-backdrop-filter: blur(25px) saturate(200%);
+}
+
+/* ── Glass buttons ────────────────────────────────────────────── */
+.glass-active .bg-secondary {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+}
+
+.glass-active.dark .bg-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+}
+
+/* ── Glass muted elements (stat boxes, inner panels) ─────────── */
+.glass-active .bg-muted {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+}
+
+.glass-active.dark .bg-muted {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+}
+
+/* ── Glass modal overlays — lighter frosted backdrop ─────────── */
+.glass-active .fixed.bg-black\/50,
+.glass-active .fixed.bg-black\/60 {
+  background: rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.glass-active.dark .fixed.bg-black\/50,
+.glass-active.dark .fixed.bg-black\/60 {
+  background: rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ── Glass modal card — stronger glass panel ─────────────────── */
+.glass-active .fixed .bg-card {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.15),
+    inset 0 0 20px rgba(255, 255, 255, 0.12);
+  border: 0.5px solid rgba(255, 255, 255, 0.25);
+}
+
+.glass-active.dark .fixed .bg-card {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.18),
+    inset 0 0 20px rgba(255, 255, 255, 0.15);
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ── Glass input fields ──────────────────────────────────────── */
+.glass-active input[data-slot="input"],
+.glass-active textarea {
+  background: rgba(0, 0, 0, 0.06) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.glass-active.dark input[data-slot="input"],
+.glass-active.dark textarea {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* ── Glass keyboard ──────────────────────────────────────────── */
+.glass-active .hg-theme-klipper {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(240, 248, 255, 0.18) 100%
+  );
+  backdrop-filter: blur(25px) saturate(200%);
+  -webkit-backdrop-filter: blur(25px) saturate(200%);
+  border-top: 0.5px solid rgba(255, 255, 255, 0.15);
+}
+
+.glass-active.dark .hg-theme-klipper {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.07) 50%,
+    rgba(240, 248, 255, 0.08) 100%
+  );
+  border-top: 0.5px solid rgba(255, 255, 255, 0.12);
+}
+
+.glass-active .hg-theme-klipper .hg-button {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+}
+
+.glass-active.dark .hg-theme-klipper .hg-button {
+  background: rgba(255, 255, 255, 0.07);
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.05);
+}
+
+.glass-active .hg-theme-klipper .hg-button:active,
+.glass-active .hg-theme-klipper .hg-button.hg-activeButton {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.glass-active.dark .hg-theme-klipper .hg-button:active,
+.glass-active.dark .hg-theme-klipper .hg-button.hg-activeButton {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.glass-active .hg-theme-klipper .hg-button.kb-action-key {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.glass-active.dark .hg-theme-klipper .hg-button.kb-action-key {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* ── react-simple-keyboard theme ────────────────────────────────── */
