@@ -37,12 +37,11 @@ export function useUPlot() {
   const plotRef = useRef<uPlot | null>(null);
   const sensorsRef = useRef<string[]>([]);
   const theme = useUiStore((s) => s.theme);
+  const themePreset = useUiStore((s) => s.themePreset);
   const hiddenSensors = useUiStore((s) => s.hiddenSensors);
   const hiddenRef = useRef(hiddenSensors);
   hiddenRef.current = hiddenSensors;
   const [legendKeys, setLegendKeys] = useState<string[]>(["extruder", "bed"]);
-
-  const themePreset = useUiStore((s) => s.themePreset);
 
   const createPlot = useCallback((width: number, height: number, sensors: string[]) => {
     if (!containerRef.current) return;
@@ -118,7 +117,7 @@ export function useUPlot() {
     const emptyData: uPlot.AlignedData = [[], ...sensors.map(() => [] as number[])];
     plotRef.current = new uPlot(opts, emptyData, containerRef.current);
     sensorsRef.current = sensors;
-  }, [theme, themePreset]);
+  }, [theme]);
 
   // Discover sensors and create/recreate plot + resize observer
   useEffect(() => {
@@ -151,7 +150,7 @@ export function useUPlot() {
       plotRef.current?.destroy();
       plotRef.current = null;
     };
-  }, [createPlot, hiddenSensors]);
+  }, [createPlot, hiddenSensors, themePreset]);
 
   // Push data on store updates
   useEffect(() => {
