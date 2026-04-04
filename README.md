@@ -24,7 +24,7 @@ A modern touchscreen UI for Klipper 3D printers.
 On your Raspberry Pi (ARM64, Debian/Ubuntu), run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/staticfc/klipper-touch/master/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/staticfx/klipper-touch/master/scripts/install.sh | bash
 ```
 
 Or with options:

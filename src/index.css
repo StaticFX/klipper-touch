@@ -393,6 +393,56 @@ body {
   background: rgba(255, 255, 255, 0.1);
 }
 
+/* ── Fallback for devices without backdrop-filter (Raspberry Pi) ── */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-active .bg-card,
+  .glass-active .bg-muted\/50 {
+    background: rgba(240, 238, 235, 0.92);
+  }
+  .glass-active.dark .bg-card,
+  .glass-active.dark .bg-muted\/50 {
+    background: rgba(30, 28, 26, 0.92);
+  }
+  .glass-active .bg-background {
+    background: rgba(235, 232, 228, 0.95);
+  }
+  .glass-active.dark .bg-background {
+    background: rgba(24, 22, 20, 0.95);
+  }
+  .glass-active .bg-secondary {
+    background: rgba(230, 228, 224, 0.85);
+  }
+  .glass-active.dark .bg-secondary {
+    background: rgba(40, 38, 35, 0.85);
+  }
+  .glass-active .bg-muted {
+    background: rgba(225, 222, 218, 0.7);
+  }
+  .glass-active.dark .bg-muted {
+    background: rgba(35, 33, 30, 0.7);
+  }
+  .glass-active .hg-theme-klipper {
+    background: rgba(235, 232, 228, 0.95);
+  }
+  .glass-active.dark .hg-theme-klipper {
+    background: rgba(28, 26, 24, 0.95);
+  }
+  .glass-active .hg-theme-klipper .hg-button {
+    background: rgba(220, 218, 214, 0.8);
+  }
+  .glass-active.dark .hg-theme-klipper .hg-button {
+    background: rgba(50, 48, 44, 0.8);
+  }
+  .glass-active .fixed.bg-black\/50,
+  .glass-active .fixed.bg-black\/60 {
+    background: rgba(0, 0, 0, 0.35) !important;
+  }
+  .glass-active.dark .fixed.bg-black\/50,
+  .glass-active.dark .fixed.bg-black\/60 {
+    background: rgba(0, 0, 0, 0.5) !important;
+  }
+}
+
 /* ── react-simple-keyboard theme ────────────────────────────────── */
 .hg-theme-klipper {
   background: var(--color-card);
