@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::io::Read;
 
 /// Download printer.cfg from Moonraker's file API.
 #[tauri::command]
@@ -7,38 +8,45 @@ pub async fn fetch_printer_config(moonraker_url: String) -> Result<String, Strin
         "{}/server/files/config/printer.cfg",
         moonraker_url.trim_end_matches('/')
     );
-    let resp = reqwest::get(&url)
-        .await
+    let resp = ureq::get(&url)
+        .call()
         .map_err(|e| format!("Failed to fetch printer.cfg: {e}"))?;
-    if !resp.status().is_success() {
+    if resp.status() != 200 {
         return Err(format!("Moonraker returned status {}", resp.status()));
     }
-    resp.text()
-        .await
-        .map_err(|e| format!("Failed to read response: {e}"))
+    let mut body = String::new();
+    resp.into_body()
+        .as_reader()
+        .read_to_string(&mut body)
+        .map_err(|e| format!("Failed to read response: {e}"))?;
+    Ok(body)
 }
 
-/// Upload printer.cfg to Moonraker's file API.
+/// Upload printer.cfg to Moonraker's file API via multipart form.
 #[tauri::command]
 pub async fn upload_printer_config(moonraker_url: String, content: String) -> Result<(), String> {
     let url = format!(
         "{}/server/files/upload",
         moonraker_url.trim_end_matches('/')
     );
-    let part = reqwest::multipart::Part::text(content)
-        .file_name("printer.cfg")
-        .mime_str("text/plain")
-        .map_err(|e| format!("Failed to create multipart: {e}"))?;
-    let form = reqwest::multipart::Form::new()
-        .text("root", "config")
-        .part("file", part);
-    let resp = reqwest::Client::new()
-        .post(&url)
-        .multipart(form)
-        .send()
-        .await
+    let boundary = format!("----klipper-touch-{}", std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis());
+
+    let mut body = Vec::new();
+    // root field
+    body.extend_from_slice(format!("--{boundary}\r\nContent-Disposition: form-data; name=\"root\"\r\n\r\nconfig\r\n").as_bytes());
+    // file field
+    body.extend_from_slice(format!("--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"printer.cfg\"\r\nContent-Type: text/plain\r\n\r\n").as_bytes());
+    body.extend_from_slice(content.as_bytes());
+    body.extend_from_slice(format!("\r\n--{boundary}--\r\n").as_bytes());
+
+    let resp = ureq::post(&url)
+        .header("Content-Type", &format!("multipart/form-data; boundary={boundary}"))
+        .send(&body[..])
         .map_err(|e| format!("Failed to upload printer.cfg: {e}"))?;
-    if !resp.status().is_success() {
+    if resp.status() != 200 {
         return Err(format!("Moonraker returned status {}", resp.status()));
     }
     Ok(())
